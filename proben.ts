@@ -1,31 +1,27 @@
-/// <reference path="node_modules/@types/google-apps-script/google-apps-script.properties.d.ts" />
 /// <reference path="node_modules/@types/google-apps-script/google-apps-script.spreadsheet.d.ts" />
 /// <reference path="node_modules/@types/google-apps-script/google-apps-script.calendar.d.ts" />
+/// <reference path="properties.ts" />
 /// <reference path="slack.ts" />
 /// <reference path="logging.ts" />
 /// <reference path="global functions.ts" />
 
-const trainingSheetName = PropertiesService.getScriptProperties().getProperty('trainingSheetName') as string;
-const planningSheetID = PropertiesService.getScriptProperties().getProperty('planningSheetID') as string;
-const calendarID = PropertiesService.getScriptProperties().getProperty('calendarID') as string;
-const jamGuestEmail = PropertiesService.getScriptProperties().getProperty('jamGuestEmail') as string;
-const reminders = [60, 180, 24*60]
+const reminders = [60, 180, 24*60];
 
 function testing() {
-  const spreadsheet = SpreadsheetApp.openById(planningSheetID);
-  const sheet = spreadsheet.getSheetByName(trainingSheetName) as GoogleAppsScript.Spreadsheet.Sheet;
+  const spreadsheet = SpreadsheetApp.openById(getPlanningSheetID());
+  const sheet = spreadsheet.getSheetByName(getTrainingSheetName()) as GoogleAppsScript.Spreadsheet.Sheet;
   const header = getHeaderOfSheet(sheet);
   sortSheet(sheet, header['Datum'], false);
 }
 
 function updateAllTrainings() {
   // Get the right TAB
-  const spreadsheet = SpreadsheetApp.openById(planningSheetID);
-  const sheet = spreadsheet.getSheetByName(trainingSheetName) as GoogleAppsScript.Spreadsheet.Sheet;
+  const spreadsheet = SpreadsheetApp.openById(getPlanningSheetID());
+  const sheet = spreadsheet.getSheetByName(getTrainingSheetName()) as GoogleAppsScript.Spreadsheet.Sheet;
   // Get Headers
   const header = getHeaderOfSheet(sheet);
   // Get Calendar
-  const calendar = CalendarApp.getCalendarById(calendarID);
+  const calendar = CalendarApp.getCalendarById(getCalendarID());
   sortSheet(sheet, header['Datum'], false);
   const lastRow = sheet.getLastRow();
   const now = new Date().getTime();
@@ -84,7 +80,7 @@ function trainingRowToCalendarEvent(sheet: GoogleAppsScript.Spreadsheet.Sheet, h
   }
   if (data.type === 'Impro-Jam') {
     // Invites the open calendar to the public event.
-    event.addGuest(jamGuestEmail);
+    event.addGuest(getJamGuestEmail());
   }
   return event.getId();
 }
@@ -111,17 +107,17 @@ function checkAndUpdateTrainingRowEvent(sheet: GoogleAppsScript.Spreadsheet.Shee
   }
   if (dataNow.type === 'Impro-Jam') {
     // It is a JAM
-    if (event.getGuestByEmail(jamGuestEmail) == null) {
+    if (event.getGuestByEmail(getJamGuestEmail()) == null) {
       // Guest is not yet inivited -> invite
-      event.addGuest(jamGuestEmail);
-      Logger.log(FORMAT + 'Event %s is a jam, added guest %s', DEBUG, PROBEN, event.getId(), jamGuestEmail);
+      event.addGuest(getJamGuestEmail());
+      Logger.log(FORMAT + 'Event %s is a jam, added guest %s', DEBUG, PROBEN, event.getId(), getJamGuestEmail());
     }
   } else {
     // It is not a JAM
-    if (event.getGuestByEmail(jamGuestEmail) != null) {
+    if (event.getGuestByEmail(getJamGuestEmail()) != null) {
       // Guest is invited, but it is not public -> remove
-      event.removeGuest(jamGuestEmail);
-      Logger.log(FORMAT + 'Event %s is not a jam (anymore?), removed guest %s', DEBUG, PROBEN, event.getId(), jamGuestEmail);
+      event.removeGuest(getJamGuestEmail());
+      Logger.log(FORMAT + 'Event %s is not a jam (anymore?), removed guest %s', DEBUG, PROBEN, event.getId(), getJamGuestEmail());
     }
   }
 }

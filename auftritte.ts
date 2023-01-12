@@ -1,27 +1,23 @@
-/// <reference path="node_modules/@types/google-apps-script/google-apps-script.properties.d.ts" />
 /// <reference path="node_modules/@types/google-apps-script/google-apps-script.base.d.ts" />
 /// <reference path="node_modules/@types/google-apps-script/google-apps-script.spreadsheet.d.ts" />
 /// <reference path="node_modules/@types/google-apps-script/google-apps-script.calendar.d.ts" />
+/// <reference path="properties.ts" />
 /// <reference path="slack.ts" />
 /// <reference path="logging.ts" />
-/// <reference path="properties.ts" />
+/// <reference path="producer-missing.ts" />
 /// <reference path="global functions.ts" />
 
-const planningSheetID = PropertiesService.getScriptProperties().getProperty('planningSheetID') as string;
-const planningSheetName = PropertiesService.getScriptProperties().getProperty('planningSheetName') as string;
-const calendarID = PropertiesService.getScriptProperties().getProperty('calendarID') as string;
-
 function test() {
-  const spreadsheet = SpreadsheetApp.openById(planningSheetID);
+  const spreadsheet = SpreadsheetApp.openById(getPlanningSheetID());
   const sheet = spreadsheet.getSheetByName('testCopy') as GoogleAppsScript.Spreadsheet.Sheet;
   const header = getHeaderOfSheet(sheet);
 }
 
 function updateAllShows() {
-  const spreadsheet = SpreadsheetApp.openById(planningSheetID);
-  const sheet = spreadsheet.getSheetByName(planningSheetName) as GoogleAppsScript.Spreadsheet.Sheet;
+  const spreadsheet = SpreadsheetApp.openById(getPlanningSheetID());
+  const sheet = spreadsheet.getSheetByName(getPlanningSheetName()) as GoogleAppsScript.Spreadsheet.Sheet;
   const header = getHeaderOfSheet(sheet);
-  const calendar = CalendarApp.getCalendarById(calendarID);
+  const calendar = CalendarApp.getCalendarById(getCalendarID());
   sortSheet(sheet, header['Start'], true);
   const lastRow = sheet.getLastRow();
   //Tables start with index 1, we ignore the header row as well, which makes it start at 2

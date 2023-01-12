@@ -1,17 +1,11 @@
-/// <reference path="node_modules/@types/google-apps-script/google-apps-script.properties.d.ts" />
 /// <reference path="node_modules/@types/google-apps-script/google-apps-script.base.d.ts" />
 /// <reference path="node_modules/@types/google-apps-script/google-apps-script.spreadsheet.d.ts" />
 /// <reference path="properties.ts" />
 /// <reference path="slack.ts" />
 /// <reference path="logging.ts" />
 /// <reference path="proben.ts" />
+/// <reference path="producer-missing.ts" />
 /// <reference path="global functions.ts" />
-
-const planningSheetID = PropertiesService.getScriptProperties().getProperty('planningSheetID') as string;
-const planningSheetName = PropertiesService.getScriptProperties().getProperty('planningSheetName') as string;
-const webhookProben = PropertiesService.getScriptProperties().getProperty('slackWebHookProben');
-const webhookTest = PropertiesService.getScriptProperties().getProperty('slackWebHookTest');
-const trainingSheetName = PropertiesService.getScriptProperties().getProperty('trainingSheetName') as string;
 
 function getAndPostTodaysProbenInfo() {
   const today = new Date();
@@ -26,13 +20,13 @@ function getAndPostTodaysProbenInfo() {
   } else {
     content = getSlackMessageForProbe(data);
   }
-  sendAlert(content, webhookProben, true);
+  sendAlert(content, getSlackHookProben(), true);
 }
 
 function findProbenInfo(searchDate: Date) {
   // Get the right TAB
-  const spreadsheet = SpreadsheetApp.openById(planningSheetID);
-  const sheet = spreadsheet.getSheetByName(trainingSheetName) as GoogleAppsScript.Spreadsheet.Sheet;
+  const spreadsheet = SpreadsheetApp.openById(getPlanningSheetID());
+  const sheet = spreadsheet.getSheetByName(getTrainingSheetName()) as GoogleAppsScript.Spreadsheet.Sheet;
   // Get Headers
   const header = getHeaderOfSheet(sheet);
   const firstDataRow = 2; //Table starts at 1, but 1 is headers
@@ -83,7 +77,7 @@ function test_findProbenInfo_and_test_PostProbe() {
   fakeToday.setDate(16);
   const data = findProbenInfo(fakeToday);
   if (data) {
-    sendAlert(getSlackMessageForProbe(data), webhookTest, false);
+    sendAlert(getSlackMessageForProbe(data), getSlackHookTest(), false);
   }
 }
 
@@ -93,9 +87,9 @@ function test_postProbe() {
   data.location = "Merlin"
   data.trainer = "Joka"
   data.topic = "Probenbeteiligung";
-  sendAlert(getSlackMessageForProbe(data), webhookTest, false);
+  sendAlert(getSlackMessageForProbe(data), getSlackHookTest(), false);
 }
 
 function test_postAusfall() {
-  sendAlert(getSlackMessageForAusfall(), webhookTest, false);
+  sendAlert(getSlackMessageForAusfall(), getSlackHookTest(), false);
 }
