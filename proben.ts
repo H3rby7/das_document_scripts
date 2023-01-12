@@ -1,19 +1,27 @@
-var trainingSheetName = PropertiesService.getScriptProperties().getProperty('trainingSheetName');
-var jamGuestEmail = PropertiesService.getScriptProperties().getProperty('jamGuestEmail');
-var reminders = [60, 180, 24*60]
+/// <reference path="node_modules/@types/google-apps-script/google-apps-script.properties.d.ts" />
+/// <reference path="node_modules/@types/google-apps-script/google-apps-script.spreadsheet.d.ts" />
+/// <reference path="node_modules/@types/google-apps-script/google-apps-script.calendar.d.ts" />
+/// <reference path="slack.ts" />
+/// <reference path="logging.ts" />
+/// <reference path="global functions.ts" />
+
+const trainingSheetName = PropertiesService.getScriptProperties().getProperty('trainingSheetName') as string;
+const planningSheetID = PropertiesService.getScriptProperties().getProperty('planningSheetID') as string;
+const calendarID = PropertiesService.getScriptProperties().getProperty('calendarID') as string;
+const jamGuestEmail = PropertiesService.getScriptProperties().getProperty('jamGuestEmail') as string;
+const reminders = [60, 180, 24*60]
 
 function testing() {
   const spreadsheet = SpreadsheetApp.openById(planningSheetID);
-  const sheet = spreadsheet.getSheetByName(trainingSheetName);
+  const sheet = spreadsheet.getSheetByName(trainingSheetName) as GoogleAppsScript.Spreadsheet.Sheet;
   const header = getHeaderOfSheet(sheet);
-  const calendar = CalendarApp.getCalendarById(calendarID);
   sortSheet(sheet, header['Datum'], false);
 }
 
 function updateAllTrainings() {
   // Get the right TAB
   const spreadsheet = SpreadsheetApp.openById(planningSheetID);
-  const sheet = spreadsheet.getSheetByName(trainingSheetName);
+  const sheet = spreadsheet.getSheetByName(trainingSheetName) as GoogleAppsScript.Spreadsheet.Sheet;
   // Get Headers
   const header = getHeaderOfSheet(sheet);
   // Get Calendar
@@ -34,7 +42,7 @@ function updateAllTrainings() {
   }
 }
 
-function createOrUpdateEventForTrainingRow(sheet, header, rowNr, calendar) {
+function createOrUpdateEventForTrainingRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number, calendar: GoogleAppsScript.Calendar.Calendar): string | undefined{
   var eventId = sheet.getRange(rowNr, header['ID']).getValue();
   var status = sheet.getRange(rowNr, header['Status']).getValue();
   if (status == 'fällt aus') {
@@ -61,7 +69,7 @@ function createOrUpdateEventForTrainingRow(sheet, header, rowNr, calendar) {
 }
 
 // This function creates new Events based on the passed data
-function trainingRowToCalendarEvent(sheet, header, rowNr, calendar) {
+function trainingRowToCalendarEvent(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number, calendar: GoogleAppsScript.Calendar.Calendar): string {
   const data = getDataFromTrainingRow(sheet, header, rowNr);
   // create event with all necessities
   const event = calendar.createEvent(
@@ -81,14 +89,12 @@ function trainingRowToCalendarEvent(sheet, header, rowNr, calendar) {
   return event.getId();
 }
 
-function checkAndUpdateTrainingRowEvent(sheet, header, rowNr, calendar, eventId) {
+function checkAndUpdateTrainingRowEvent(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number, calendar: GoogleAppsScript.Calendar.Calendar, eventId: string) {
   const event = calendar.getEventById(eventId);
   const dataNow = getDataFromTrainingRow(sheet, header, rowNr);
   
-  // CalendarApp.getCalendarById(calendarID).getEventById().setL();
-
-  if (event.getSummary() !== dataNow.eventName) {
-    event.setSummary(dataNow.eventName);
+  if (event.getTitle() !== dataNow.eventName) {
+    event.setTitle(dataNow.eventName);
     Logger.log(FORMAT + 'Event: %s, updating summary', INFO, PROBEN, eventId);
   }
   if (!areDatesEqual(event.getStartTime(), dataNow.startDate) || !areDatesEqual(event.getEndTime(), dataNow.endDate)) {
@@ -121,8 +127,8 @@ function checkAndUpdateTrainingRowEvent(sheet, header, rowNr, calendar, eventId)
 }
 
 // CORE function, retrieves all data and puts it into one object for simple useage
-function getDataFromTrainingRow(sheet, header, rowNr) {
-  var data = {};
+function getDataFromTrainingRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number): any {
+  var data: any = {};
   //get data from row
   const type = sheet.getRange(rowNr, header['Probenform']).getValue();
   const location = sheet.getRange(rowNr, header['Location']).getValue();

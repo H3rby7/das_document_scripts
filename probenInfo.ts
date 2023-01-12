@@ -1,5 +1,17 @@
-var webhookProben = PropertiesService.getScriptProperties().getProperty('slackWebHookProben');
+/// <reference path="node_modules/@types/google-apps-script/google-apps-script.properties.d.ts" />
+/// <reference path="node_modules/@types/google-apps-script/google-apps-script.base.d.ts" />
+/// <reference path="node_modules/@types/google-apps-script/google-apps-script.spreadsheet.d.ts" />
+/// <reference path="properties.ts" />
+/// <reference path="slack.ts" />
+/// <reference path="logging.ts" />
+/// <reference path="proben.ts" />
+/// <reference path="global functions.ts" />
+
+const planningSheetID = PropertiesService.getScriptProperties().getProperty('planningSheetID') as string;
+const planningSheetName = PropertiesService.getScriptProperties().getProperty('planningSheetName') as string;
+const webhookProben = PropertiesService.getScriptProperties().getProperty('slackWebHookProben');
 const webhookTest = PropertiesService.getScriptProperties().getProperty('slackWebHookTest');
+const trainingSheetName = PropertiesService.getScriptProperties().getProperty('trainingSheetName') as string;
 
 function getAndPostTodaysProbenInfo() {
   const today = new Date();
@@ -17,10 +29,10 @@ function getAndPostTodaysProbenInfo() {
   sendAlert(content, webhookProben, true);
 }
 
-function findProbenInfo(searchDate) {
+function findProbenInfo(searchDate: Date) {
   // Get the right TAB
   const spreadsheet = SpreadsheetApp.openById(planningSheetID);
-  const sheet = spreadsheet.getSheetByName(trainingSheetName);
+  const sheet = spreadsheet.getSheetByName(trainingSheetName) as GoogleAppsScript.Spreadsheet.Sheet;
   // Get Headers
   const header = getHeaderOfSheet(sheet);
   const firstDataRow = 2; //Table starts at 1, but 1 is headers
@@ -47,7 +59,7 @@ function findIndexOfDate(array2d, dateToFind) {
   return -1;
 }
 
-function getSlackMessageForProbe(trainingData) {
+function getSlackMessageForProbe(trainingData: any) {
   const trainingStart = new Date(trainingData.startDate);
   const date = formatDateForHumans(trainingStart);
   const time = formatTimeForHumans(trainingStart);
@@ -76,7 +88,7 @@ function test_findProbenInfo_and_test_PostProbe() {
 }
 
 function test_postProbe() {
-  var data = {};
+  var data: any = {};
   data.startDate = new Date();
   data.location = "Merlin"
   data.trainer = "Joka"

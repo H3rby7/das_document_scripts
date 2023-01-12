@@ -1,9 +1,15 @@
-var webhookAllgemein = PropertiesService.getScriptProperties().getProperty('slackWebHookAllgemein');
+/// <reference path="node_modules/@types/google-apps-script/google-apps-script.properties.d.ts" />
+/// <reference path="node_modules/@types/google-apps-script/google-apps-script.base.d.ts" />
+/// <reference path="node_modules/@types/google-apps-script/google-apps-script.url-fetch.d.ts" />
+/// <reference path="slack.ts" />
+/// <reference path="logging.ts" />
+
+const webhookAllgemein = PropertiesService.getScriptProperties().getProperty('slackWebHookAllgemein');
 const webhookTest = PropertiesService.getScriptProperties().getProperty('slackWebHookTest');
 const linkToSpreadsheet = PropertiesService.getScriptProperties().getProperty('linkToSpreadsheet');
 
 function testProducerMissing() {
-  var data = {};
+  var data: any = {};
   const format = 'TBD';
   const status = 'zugesagt';
   const notes = 'Fuß, Inder, Tür';
@@ -87,7 +93,7 @@ function getSlackMessageProducerMissing(showData) {
 }
 
 function sendAlert(payload, webhook, muteHttpExceptions) {
-  var options = {
+  var options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
     "method": "post", 
     "contentType": "application/json", 
     "muteHttpExceptions": muteHttpExceptions, 

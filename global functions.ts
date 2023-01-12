@@ -1,5 +1,12 @@
-function getDataFromShowRow(sheet, header, rowNr) {
-  var data = {};
+/// <reference path="node_modules/@types/google-apps-script/google-apps-script.spreadsheet.d.ts" />
+/// <reference path="node_modules/@types/google-apps-script/google-apps-script-events.d.ts" />
+/// <reference path="node_modules/@types/google-apps-script/apis/calendar_v3.d.ts" />
+/// <reference path="node_modules/@types/google-apps-script/google-apps-script.types.d.ts" />
+/// <reference path="slack.ts" />
+/// <reference path="logging.ts" />
+
+function getDataFromShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number) {
+  var data: any = {};
   //get data from row
   const startDate = sheet.getRange(rowNr, header['Start']).getValue();
   var minutesToMeetBeforeShow = sheet.getRange(rowNr, header['Treffen (vorher MIN)']).getValue();
@@ -47,15 +54,22 @@ function showRowToCalendarEvent(showData, calendar) {
   return event;
 }
 
-function checkAndUpdateShowRowEvent(showData, calendar, eventId) {
-  const calendarId = calendar.getId();
-  const strippedId = eventId.split('@')[0]
-  const event = Calendar.Events.get(calendarId, strippedId);
+function checkAndUpdateShowRowEvent(showData: any, calendarId: string, eventId: string): boolean {
+  const strippedId = eventId.split('@')[0];
+  const cEvents = Calendar.Events as GoogleAppsScript.Calendar.Collection.EventsCollection;
+  const event = cEvents.get(calendarId, strippedId) as GoogleAppsScript.Calendar.Schema.Event;
   const startDate = formatDateForEvent(showData.startDate);
   const endDate = formatDateForEvent(showData.endDate);
   
   var postUpdate = false;
-  
+  if (!event.start) {
+    Logger.log(FORMAT + 'Event: %s has no start!', WARN, EVENTS, eventId);
+    event.start = {};
+  }
+  if (!event.end) {
+    Logger.log(FORMAT + 'Event: %s has no end!', WARN, EVENTS, eventId);
+    event.end = {};
+  }
   if (event.summary !== showData.eventName) {
     event.summary = showData.eventName;
     postUpdate = true;
@@ -78,10 +92,10 @@ function checkAndUpdateShowRowEvent(showData, calendar, eventId) {
   }
   if(postUpdate) {
     Logger.log(FORMAT + 'updating event: %s. Checking to update event.', INFO, EVENTS, eventId);
-  	Calendar.Events.update(event, calendarId, strippedId);
-    return;
+  	cEvents.update(event, calendarId, strippedId);
+  } else {
+    Logger.log(FORMAT + 'Event did not change: %s', TRACE, EVENTS, eventId);
   }
-  Logger.log(FORMAT + 'Event did not change: %s', TRACE, EVENTS, eventId);
   return postUpdate;
 }
 

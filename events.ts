@@ -1,5 +1,5 @@
-/// <reference path="node_modules/@types/google-apps-script/google-apps-script.base.d.ts" />
 /// <reference path="node_modules/@types/google-apps-script/google-apps-script.properties.d.ts" />
+/// <reference path="node_modules/@types/google-apps-script/google-apps-script.base.d.ts" />
 
 function printProperties() {
   const properties = PropertiesService.getScriptProperties();

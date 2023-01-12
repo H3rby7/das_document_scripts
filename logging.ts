@@ -1,4 +1,3 @@
-/// <reference path="node_modules/@types/google-apps-script/google-apps-script.base.d.ts" />
 /// <reference path="slack.ts" />
 
 const TRACE = logLevel("TRACE");

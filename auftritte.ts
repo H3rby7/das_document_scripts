@@ -1,16 +1,25 @@
-var planningSheetID = PropertiesService.getScriptProperties().getProperty('planningSheetID');
-var planningSheetName = PropertiesService.getScriptProperties().getProperty('planningSheetName');
-var calendarID = PropertiesService.getScriptProperties().getProperty('calendarID');
+/// <reference path="node_modules/@types/google-apps-script/google-apps-script.properties.d.ts" />
+/// <reference path="node_modules/@types/google-apps-script/google-apps-script.base.d.ts" />
+/// <reference path="node_modules/@types/google-apps-script/google-apps-script.spreadsheet.d.ts" />
+/// <reference path="node_modules/@types/google-apps-script/google-apps-script.calendar.d.ts" />
+/// <reference path="slack.ts" />
+/// <reference path="logging.ts" />
+/// <reference path="properties.ts" />
+/// <reference path="global functions.ts" />
+
+const planningSheetID = PropertiesService.getScriptProperties().getProperty('planningSheetID') as string;
+const planningSheetName = PropertiesService.getScriptProperties().getProperty('planningSheetName') as string;
+const calendarID = PropertiesService.getScriptProperties().getProperty('calendarID') as string;
 
 function test() {
   const spreadsheet = SpreadsheetApp.openById(planningSheetID);
-  const sheet = spreadsheet.getSheetByName('testCopy');
+  const sheet = spreadsheet.getSheetByName('testCopy') as GoogleAppsScript.Spreadsheet.Sheet;
   const header = getHeaderOfSheet(sheet);
 }
 
 function updateAllShows() {
   const spreadsheet = SpreadsheetApp.openById(planningSheetID);
-  const sheet = spreadsheet.getSheetByName(planningSheetName);
+  const sheet = spreadsheet.getSheetByName(planningSheetName) as GoogleAppsScript.Spreadsheet.Sheet;
   const header = getHeaderOfSheet(sheet);
   const calendar = CalendarApp.getCalendarById(calendarID);
   sortSheet(sheet, header['Start'], true);
@@ -21,7 +30,7 @@ function updateAllShows() {
   }
 }
 
-function createOrUpdateEventForShowRow(sheet, header, rowNr, calendar) {
+function createOrUpdateEventForShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number, calendar: GoogleAppsScript.Calendar.Calendar) {
   // Check if the event has passed already
   if (isShowEventInThePast(sheet, header, rowNr)) {
     Logger.log(FORMAT + 'skipping old show: %s', TRACE, AUFTRITTE, rowNr);
@@ -50,14 +59,14 @@ function createOrUpdateEventForShowRow(sheet, header, rowNr, calendar) {
     sheet.getRange(rowNr, header['ID']).setValue(event.getId());
   } else {
     Logger.log(FORMAT + 'eventId present for row: %s. Checking to update event.', TRACE, AUFTRITTE, rowNr);
-    checkAndUpdateShowRowEvent(showData, calendar, eventId);
+    checkAndUpdateShowRowEvent(showData, calendar.getId(), eventId);
   }
 
   alertProducerMissingIfNecessary(showData);
 
 }
 
-function alertProducerMissingIfNecessary(showData) {
+function alertProducerMissingIfNecessary(showData: any) {
 
   if (showData.producer && showData.producer != "") {
     Logger.log(FORMAT + "Event on '%s' (%s) has a producer", TRACE, AUFTRITTE, showData.startDate, showData.eventName);
@@ -87,7 +96,7 @@ function alertProducerMissingIfNecessary(showData) {
    * Within 28 days to 14 days it will add another reminder to tuesday [weekday #2] at 7pm.
    * Within 14 days turns into a daily reminder at 7pm.
    */
-function shouldSendProducerMissingAlert(utcMillisShowStart) {
+function shouldSendProducerMissingAlert(utcMillisShowStart: number) {
   const today = new Date();
   const weekDay = today.getDay();
   const time = today.getHours();
