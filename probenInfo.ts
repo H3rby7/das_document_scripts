@@ -4,8 +4,7 @@
 /// <reference path="slack.ts" />
 /// <reference path="logging.ts" />
 /// <reference path="proben.ts" />
-/// <reference path="producer-missing.ts" />
-/// <reference path="global functions.ts" />
+/// <reference path="global-functions.ts" />
 
 function getAndPostTodaysProbenInfo() {
   const today = new Date();
@@ -20,7 +19,7 @@ function getAndPostTodaysProbenInfo() {
   } else {
     content = getSlackMessageForProbe(data);
   }
-  sendAlert(content, getSlackHookProben(false), true);
+  sendSlackAlert(content, getSlackHookProben(false), true);
 }
 
 function findProbenInfo(searchDate: Date, dev = false) {
@@ -78,7 +77,7 @@ function test_findProbenInfo_and_test_PostProbe() {
   fakeToday.setDate(16); // <- Change this to the day of the month, which has a rehearsal
   const data = findProbenInfo(fakeToday, true);
   if (data) {
-    sendAlert(getSlackMessageForProbe(data), getSlackHookProben(true), false);
+    sendSlackAlert(getSlackMessageForProbe(data), getSlackHookProben(true), false);
   }
 }
 
@@ -88,9 +87,9 @@ function test_postProbe() {
   data.location = "Merlin"
   data.trainer = "Joka"
   data.topic = "Probenbeteiligung";
-  sendAlert(getSlackMessageForProbe(data), getSlackHookProben(true), false);
+  sendSlackAlert(getSlackMessageForProbe(data), getSlackHookProben(true), false);
 }
 
 function test_postAusfall() {
-  sendAlert(getSlackMessageForAusfall(), getSlackHookProben(true), false);
+  sendSlackAlert(getSlackMessageForAusfall(), getSlackHookProben(true), false);
 }

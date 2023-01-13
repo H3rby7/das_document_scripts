@@ -3,7 +3,7 @@
 /// <reference path="properties.ts" />
 /// <reference path="slack.ts" />
 /// <reference path="logging.ts" />
-/// <reference path="global functions.ts" />
+/// <reference path="global-functions.ts" />
 
 const reminders = [60, 180, 24*60];
 

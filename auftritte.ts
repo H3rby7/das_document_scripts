@@ -1,11 +1,12 @@
 /// <reference path="node_modules/@types/google-apps-script/google-apps-script.base.d.ts" />
 /// <reference path="node_modules/@types/google-apps-script/google-apps-script.spreadsheet.d.ts" />
 /// <reference path="node_modules/@types/google-apps-script/google-apps-script.calendar.d.ts" />
+/// <reference path="node_modules/@types/google-apps-script/apis/calendar_v3.d.ts" />
 /// <reference path="properties.ts" />
 /// <reference path="slack.ts" />
 /// <reference path="logging.ts" />
 /// <reference path="producer-missing.ts" />
-/// <reference path="global functions.ts" />
+/// <reference path="global-functions.ts" />
 
 function test_updateAllShows() {
   updateAllShows(true);
@@ -60,60 +61,96 @@ function createOrUpdateEventForShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet
 
 }
 
-function alertProducerMissingIfNecessary(showData: any, dev = false) {
-
-  if (showData.producer && showData.producer != "") {
-    Logger.log(FORMAT + "Event on '%s' (%s) has a producer", TRACE, AUFTRITTE, showData.startDate, showData.eventName);
-    return;
+function getDataFromShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number) {
+  var data: any = {};
+  //get data from row
+  const startDate = sheet.getRange(rowNr, header['Start']).getValue();
+  var minutesToMeetBeforeShow = sheet.getRange(rowNr, header['Treffen (vorher MIN)']).getValue();
+  var duration = sheet.getRange(rowNr, header['Dauer (MIN)']).getValue();
+  const format = sheet.getRange(rowNr, header['Format']).getValue();
+  const status = sheet.getRange(rowNr, header['Status']).getValue();
+  const producer = sheet.getRange(rowNr, header['Verantwortlich']).getValue();
+  const notes = sheet.getRange(rowNr, header['Notizen']).getValue();
+  //make sure to have a meeting time
+  if (!minutesToMeetBeforeShow || typeof(minutesToMeetBeforeShow)!="number" || minutesToMeetBeforeShow < 1) {
+    minutesToMeetBeforeShow = 120;
   }
-
-  // Show has no producer, check if it is far enough away to not worry
-  const utcMillisShowStart = showData.startDate.valueOf();
-  if (!isWithinDays(utcMillisShowStart, 42)) {
-    Logger.log(FORMAT + "Event on '%s' (%s) is far enough in the future -> does not need a producer (yet)", TRACE, AUFTRITTE, showData.startDate, showData.eventName);
-    return;
+  //make sure to have a duration
+  if (!duration || typeof(duration)!="number" || duration < 1) {
+    duration = 120;
   }
-  // Show is imminent and has no producer... ALARM!
-  Logger.log(FORMAT + "Event on '%s' (%s) needs a producer!", DEBUG, AUFTRITTE, showData.startDate, showData.eventName);
-
-  if (shouldSendProducerMissingAlert(utcMillisShowStart)) {
-    producerMissing(showData, dev);
-  } else {
-    Logger.log(FORMAT + "Event on '%s' (%s) will not alert for a producer on this invocation...", DEBUG, AUFTRITTE, showData.startDate, showData.eventName);
-  }
+  //adjust dates for calendar
+  data.location = sheet.getRange(rowNr, header['Location']).getValue();
+  data.startDate = new Date(startDate.getTime() - minutesToMeetBeforeShow * 60000);
+  data.endDate = new Date(startDate.getTime() + duration * 60000);
+  data.eventName = format + ' (' + data.location + '), ' + status;
+  data.producer = producer;
+  data.notes = notes;
+  data.description = 'Verantwortlich: ' + producer + '\n' + notes;
+  return data;
 }
 
-/**
-   * Alert Slack, according to some rules:
-   * 
-   * Within 42 to 28 days, it is only a weekly reminder on Saturday [weekday #6] at 12AM.
-   * Within 28 days to 14 days it will add another reminder to tuesday [weekday #2] at 7pm.
-   * Within 14 days turns into a daily reminder at 7pm.
-   */
-function shouldSendProducerMissingAlert(utcMillisShowStart: number) {
-  const today = new Date();
-  const weekDay = today.getDay();
-  const time = today.getHours();
+function isShowEventInThePast(sheet, header, rowNr) {
+  var eventStart = sheet.getRange(rowNr, header['Start']).getValue();
+  if (!eventStart) return;
+  var timestamp = eventStart.getTime();
+  if (!timestamp) return;
+  return new Date().getTime() > timestamp;
+}
 
-  if (isWithinDays(utcMillisShowStart, 14)) {
-    // Any weekday at 7 PM
-    return time == 19;
+function showRowToCalendarEvent(showData, calendar) {
+  // create event with all necessities
+  const event = calendar.createEvent(
+    showData.eventName,
+    showData.startDate,
+    showData.endDate
+  )
+  event.setLocation(showData.location);
+  event.setDescription(showData.description);
+  return event;
+}
+
+function checkAndUpdateShowRowEvent(showData: any, calendarId: string, eventId: string): boolean {
+  const strippedId = eventId.split('@')[0];
+  const cEvents = Calendar.Events as GoogleAppsScript.Calendar.Collection.EventsCollection;
+  const event = cEvents.get(calendarId, strippedId) as GoogleAppsScript.Calendar.Schema.Event;
+  const startDate = formatDateForEvent(showData.startDate);
+  const endDate = formatDateForEvent(showData.endDate);
+  
+  var postUpdate = false;
+  if (!event.start) {
+    Logger.log(FORMAT + 'Event: %s has no start!', WARN, EVENTS, eventId);
+    event.start = {};
   }
-  if (isWithinDays(utcMillisShowStart, 28)) {
-    // Saturday at 12 AM
-    if (weekDay === 6 && time === 12) {
-      return true;
-    }
-    // Tuesday at 7 PM
-    if (weekDay === 2 && time === 19) {
-      return true;
-    }
+  if (!event.end) {
+    Logger.log(FORMAT + 'Event: %s has no end!', WARN, EVENTS, eventId);
+    event.end = {};
   }
-  if (isWithinDays(utcMillisShowStart, 42)) {
-    // Saturday at 12 AM
-    if (weekDay === 6 && time === 12) {
-      return true;
-    }
+  if (event.summary !== showData.eventName) {
+    event.summary = showData.eventName;
+    postUpdate = true;
   }
-  return false;
+  if (event.start.dateTime !== startDate) {
+    event.start.dateTime = startDate;
+    postUpdate = true;
+  }
+  if (event.end.dateTime !== endDate) {
+    event.end.dateTime = endDate;
+    postUpdate = true;
+  }
+  if (event.description !== showData.description) {
+    event.description = showData.description;
+    postUpdate = true;
+  }
+  if (event.location !== showData.location) {
+    event.location = showData.location;
+    postUpdate = true;
+  }
+  if(postUpdate) {
+    Logger.log(FORMAT + 'updating event: %s. Checking to update event.', INFO, EVENTS, eventId);
+  	cEvents.update(event, calendarId, strippedId);
+  } else {
+    Logger.log(FORMAT + 'Event did not change: %s', TRACE, EVENTS, eventId);
+  }
+  return postUpdate;
 }

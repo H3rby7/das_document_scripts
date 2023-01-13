@@ -1,10 +1,68 @@
 /// <reference path="node_modules/@types/google-apps-script/google-apps-script.base.d.ts" />
-/// <reference path="node_modules/@types/google-apps-script/google-apps-script.url-fetch.d.ts" />
 /// <reference path="properties.ts" />
+/// <reference path="global-functions.ts" />
 /// <reference path="slack.ts" />
 /// <reference path="logging.ts" />
 
-function testProducerMissing() {
+function alertProducerMissingIfNecessary(showData: any, dev = false) {
+
+  if (showData.producer && showData.producer != "") {
+    Logger.log(FORMAT + "Event on '%s' (%s) has a producer", TRACE, AUFTRITTE, showData.startDate, showData.eventName);
+    return;
+  }
+
+  // Show has no producer, check if it is far enough away to not worry
+  const utcMillisShowStart = showData.startDate.valueOf();
+  if (!isWithinDays(utcMillisShowStart, 42)) {
+    Logger.log(FORMAT + "Event on '%s' (%s) is far enough in the future -> does not need a producer (yet)", TRACE, AUFTRITTE, showData.startDate, showData.eventName);
+    return;
+  }
+  // Show is imminent and has no producer... ALARM!
+  Logger.log(FORMAT + "Event on '%s' (%s) needs a producer!", DEBUG, AUFTRITTE, showData.startDate, showData.eventName);
+
+  if (shouldSendProducerMissingAlert(utcMillisShowStart)) {
+    producerMissing(showData, dev);
+  } else {
+    Logger.log(FORMAT + "Event on '%s' (%s) will not alert for a producer on this invocation...", DEBUG, AUFTRITTE, showData.startDate, showData.eventName);
+  }
+}
+
+/**
+   * Alert Slack, according to some rules:
+   * 
+   * Within 42 to 28 days, it is only a weekly reminder on Saturday [weekday #6] at 12AM.
+   * Within 28 days to 14 days it will add another reminder to tuesday [weekday #2] at 7pm.
+   * Within 14 days turns into a daily reminder at 7pm.
+   */
+function shouldSendProducerMissingAlert(utcMillisShowStart: number) {
+  const today = new Date();
+  const weekDay = today.getDay();
+  const time = today.getHours();
+
+  if (isWithinDays(utcMillisShowStart, 14)) {
+    // Any weekday at 7 PM
+    return time == 19;
+  }
+  if (isWithinDays(utcMillisShowStart, 28)) {
+    // Saturday at 12 AM
+    if (weekDay === 6 && time === 12) {
+      return true;
+    }
+    // Tuesday at 7 PM
+    if (weekDay === 2 && time === 19) {
+      return true;
+    }
+  }
+  if (isWithinDays(utcMillisShowStart, 42)) {
+    // Saturday at 12 AM
+    if (weekDay === 6 && time === 12) {
+      return true;
+    }
+  }
+  return false;
+}
+
+function test_producerMissingSlackMessage() {
   var data: any = {};
   const format = 'TBD';
   const status = 'zugesagt';
@@ -16,22 +74,11 @@ function testProducerMissing() {
   data.startDate = new Date(Date.now() + 600000);
   data.eventName = format + ' (' + data.location + '), ' + status;
   data.notes = notes;
-  sendAlert(getSlackMessageProducerMissing(data, true), getSlackHookAllgemein(true), false);
+  sendSlackAlert(getSlackMessageProducerMissing(data, true), getSlackHookAllgemein(true), false);
 }
 
 function producerMissing(showData, dev = false) {
-  sendAlert(getSlackMessageProducerMissing(showData, dev), getSlackHookAllgemein(dev), true);
-}
-
-function formatDateForHumans(date) {
-  return padNumber(date.getDate(), 2)
-  + "." + padNumber(date.getMonth() + 1, 2)
-  + "." + padNumber(date.getFullYear(), 4);
-}
-
-function formatTimeForHumans(date) {
- return padNumber(date.getHours(), 2)
-   + ":" + padNumber(date.getMinutes(), 2);
+  sendSlackAlert(getSlackMessageProducerMissing(showData, dev), getSlackHookAllgemein(dev), true);
 }
 
 function getSlackMessageProducerMissing(showData, dev = false) {
@@ -86,19 +133,4 @@ function getSlackMessageProducerMissing(showData, dev = false) {
     ]
   }
 
-}
-
-function sendAlert(payload, webhook, muteHttpExceptions) {
-  var options: GoogleAppsScript.URL_Fetch.URLFetchRequestOptions = {
-    "method": "post", 
-    "contentType": "application/json", 
-    "muteHttpExceptions": muteHttpExceptions, 
-    "payload": JSON.stringify(payload) 
-  };
-  
-  try {
-    UrlFetchApp.fetch(webhook, options);
-  } catch(e) {
-    Logger.log(e);
-  }
 }

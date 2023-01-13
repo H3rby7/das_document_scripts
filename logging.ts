@@ -1,4 +1,5 @@
 /// <reference path="slack.ts" />
+/// <reference path="global-functions.ts" />
 
 const TRACE = logLevel("TRACE");
 const DEBUG = logLevel("DEBUG");
