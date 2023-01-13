@@ -8,8 +8,8 @@ const WARN =  logLevel("WARN");
 
 const AUFTRITTE = fileName("auftritte");
 const PROBEN = fileName("proben");
-const PROBEN_INFO = fileName("proben-info");
-const PRODUCER_MISSING = fileName("producer-missing");
+const PROBEN_INFO = fileName("prob-info");
+const PRODUCER_MISSING = fileName("prod-miss");
 const SLACK = fileName("slack");
 
 const FORMAT = "%s - %s => "
