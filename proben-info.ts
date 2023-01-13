@@ -61,14 +61,14 @@ function getSlackMessageForProbe(trainingData: Rehearsal): SlackSimpleText {
 
   // https://api.slack.com/reference/surfaces/formatting#retrieving-messages
   return {
-    "text": "PROBE HEUTE UM " + time + " UHR, " + trainingData.location + "\nLeitung durch: " + trainingData.trainer + ", Thema: '" + trainingData.topic + "'\n <!channel>"
+    "text": "PROBE HEUTE UM " + time + " UHR, " + trainingData.location + "\nLeitung durch: " + trainingData.trainer + ", Thema: '" + trainingData.topic + "'\n<!channel>"
   }
 }
 
 function getSlackMessageForAusfall(): SlackSimpleText {
   Logger.log(FORMAT + "Producing Slack canceled training message.", INFO, PROBEN_INFO);
   return {
-    "text": "Heute leider keine Probe :cry: \n <!channel> :beer:?"
+    "text": "Heute leider keine Probe :cry: \n<!channel> :beer:?"
   }
 }
 
