@@ -13,7 +13,7 @@ function getAndPostTodaysProbenInfo() {
     // no info on today, do nothing.
     return;
   }
-  let content;
+  let content: SlackSimpleText;
   if (data.status == "fällt aus") {
     content = getSlackMessageForAusfall();
   } else {
@@ -22,7 +22,7 @@ function getAndPostTodaysProbenInfo() {
   sendSlackAlert(content, getSlackHookProben(false), true);
 }
 
-function findProbenInfo(searchDate: Date, dev = false): any {
+function findProbenInfo(searchDate: Date, dev = false): Rehearsal | null {
   // Get the right TAB
   const spreadsheet = SpreadsheetApp.openById(getPlanningSheetID(dev));
   const sheet = spreadsheet.getSheetByName(getTrainingSheetName()) as GoogleAppsScript.Spreadsheet.Sheet;
@@ -32,7 +32,7 @@ function findProbenInfo(searchDate: Date, dev = false): any {
   const expectDateWithinRows = 100;  // expect to find today's training within X entries (rows)
 
   const dateRange = sheet.getRange(firstDataRow, header["Datum"], expectDateWithinRows);
-  const dates = dateRange.getValues();
+  const dates = dateRange.getValues() as DateArray[];
 
   const matchingDataIndex = findIndexOfDate(dates, searchDate);
   if (matchingDataIndex < 0) {
@@ -42,7 +42,11 @@ function findProbenInfo(searchDate: Date, dev = false): any {
   return getDataFromTrainingRow(sheet, header, matchingDataIndex + firstDataRow);
 }
 
-function findIndexOfDate(array2d: any[][], dateToFind: Date): number {
+type DateArray = {
+  [key: number]: Date;
+}
+
+function findIndexOfDate(array2d: DateArray[], dateToFind: Date): number {
   for (let i = 0; i < array2d.length; i++) {
     const rowDate = new Date(array2d[i][0]);
     if (areDatesEqualDayOnly(rowDate, dateToFind)) {
