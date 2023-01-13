@@ -8,6 +8,16 @@
 /// <reference path="producer-missing.ts" />
 /// <reference path="global-functions.ts" />
 
+interface Show {
+  location: string;
+  startDate: Date;
+  endDate: Date;
+  eventName: string;
+  producer: string;
+  notes: string;
+  description: string;
+}
+
 function test_updateAllShows() {
   updateAllShows(true);
 }
@@ -61,8 +71,7 @@ function createOrUpdateEventForShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet
 
 }
 
-function getDataFromShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: Header, rowNr: number): any {
-  const data: any = {};
+function getDataFromShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: Header, rowNr: number): Show {
   //get data from row
   const startDate = sheet.getRange(rowNr, header['Start']).getValue();
   let minutesToMeetBeforeShow = sheet.getRange(rowNr, header['Treffen (vorher MIN)']).getValue();
@@ -76,18 +85,24 @@ function getDataFromShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: H
     minutesToMeetBeforeShow = 120;
   }
   //make sure to have a duration
-  if (!duration || typeof(duration)!="number" || duration < 1) {
+  if (!duration || typeof(duration) != "number" || duration < 1) {
     duration = 120;
   }
   //adjust dates for calendar
-  data.location = sheet.getRange(rowNr, header['Location']).getValue();
-  data.startDate = new Date(startDate.getTime() - minutesToMeetBeforeShow * 60000);
-  data.endDate = new Date(startDate.getTime() + duration * 60000);
-  data.eventName = format + ' (' + data.location + '), ' + status;
-  data.producer = producer;
-  data.notes = notes;
-  data.description = 'Verantwortlich: ' + producer + '\n' + notes;
-  return data;
+  const location = sheet.getRange(rowNr, header['Location']).getValue();
+  const meetUpDate = new Date(startDate.getTime() - minutesToMeetBeforeShow * 60000);
+  const endDate = new Date(startDate.getTime() + duration * 60000);
+  const eventName = format + ' (' + location + '), ' + status;
+  const description = 'Verantwortlich: ' + producer + '\n' + notes;
+  return {
+    eventName,
+    location,
+    startDate: meetUpDate,
+    description,
+    endDate,
+    producer,
+    notes
+  };
 }
 
 function isShowEventInThePast(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: Header, rowNr: number): boolean {
@@ -104,24 +119,24 @@ function isShowEventInThePast(sheet: GoogleAppsScript.Spreadsheet.Sheet, header:
   return new Date().getTime() > timestamp;
 }
 
-function showRowToCalendarEvent(showData: any, calendar: GoogleAppsScript.Calendar.Calendar): GoogleAppsScript.Calendar.CalendarEvent {
+function showRowToCalendarEvent(show: Show, calendar: GoogleAppsScript.Calendar.Calendar): GoogleAppsScript.Calendar.CalendarEvent {
   // create event with all necessities
   const event = calendar.createEvent(
-    showData.eventName,
-    showData.startDate,
-    showData.endDate
+    show.eventName,
+    show.startDate,
+    show.endDate
   )
-  event.setLocation(showData.location);
-  event.setDescription(showData.description);
+  event.setLocation(show.location);
+  event.setDescription(show.description);
   return event;
 }
 
-function checkAndUpdateShowRowEvent(showData: any, calendarId: string, eventId: string): boolean {
+function checkAndUpdateShowRowEvent(show: Show, calendarId: string, eventId: string): boolean {
   const strippedId = eventId.split('@')[0];
   const cEvents = Calendar.Events as GoogleAppsScript.Calendar.Collection.EventsCollection;
   const event = cEvents.get(calendarId, strippedId) as GoogleAppsScript.Calendar.Schema.Event;
-  const startDate = formatDateForEvent(showData.startDate);
-  const endDate = formatDateForEvent(showData.endDate);
+  const startDate = formatDateForEvent(show.startDate);
+  const endDate = formatDateForEvent(show.endDate);
   
   let postUpdate = false;
   if (!event.start) {
@@ -132,8 +147,8 @@ function checkAndUpdateShowRowEvent(showData: any, calendarId: string, eventId: 
     Logger.log(FORMAT + 'Event: %s has no end!', WARN, AUFTRITTE, eventId);
     event.end = {};
   }
-  if (event.summary !== showData.eventName) {
-    event.summary = showData.eventName;
+  if (event.summary !== show.eventName) {
+    event.summary = show.eventName;
     postUpdate = true;
   }
   if (event.start.dateTime !== startDate) {
@@ -144,12 +159,12 @@ function checkAndUpdateShowRowEvent(showData: any, calendarId: string, eventId: 
     event.end.dateTime = endDate;
     postUpdate = true;
   }
-  if (event.description !== showData.description) {
-    event.description = showData.description;
+  if (event.description !== show.description) {
+    event.description = show.description;
     postUpdate = true;
   }
-  if (event.location !== showData.location) {
-    event.location = showData.location;
+  if (event.location !== show.location) {
+    event.location = show.location;
     postUpdate = true;
   }
   if(postUpdate) {
