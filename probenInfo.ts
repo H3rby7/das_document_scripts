@@ -20,12 +20,12 @@ function getAndPostTodaysProbenInfo() {
   } else {
     content = getSlackMessageForProbe(data);
   }
-  sendAlert(content, getSlackHookProben(), true);
+  sendAlert(content, getSlackHookProben(false), true);
 }
 
-function findProbenInfo(searchDate: Date) {
+function findProbenInfo(searchDate: Date, dev = false) {
   // Get the right TAB
-  const spreadsheet = SpreadsheetApp.openById(getPlanningSheetID());
+  const spreadsheet = SpreadsheetApp.openById(getPlanningSheetID(dev));
   const sheet = spreadsheet.getSheetByName(getTrainingSheetName()) as GoogleAppsScript.Spreadsheet.Sheet;
   // Get Headers
   const header = getHeaderOfSheet(sheet);
@@ -44,7 +44,7 @@ function findProbenInfo(searchDate: Date) {
 }
 
 function findIndexOfDate(array2d, dateToFind) {
-  for (var i = 72; i <= array2d.length; i++) {
+  for (var i = 0; i < array2d.length; i++) {
     const rowDate = new Date(array2d[i][0]);
     if (areDatesEqualDayOnly(rowDate, dateToFind)) {
       return i;
@@ -58,7 +58,7 @@ function getSlackMessageForProbe(trainingData: any) {
   const date = formatDateForHumans(trainingStart);
   const time = formatTimeForHumans(trainingStart);
 
-  Logger.log(FORMAT + "Producing Slack information for today's training (%s) at %s!", INFO, SLACK, date, time);
+  Logger.log(FORMAT + "Producing Slack information for today's (%s) training at %s!", INFO, SLACK, date, time);
 
   // https://api.slack.com/reference/surfaces/formatting#retrieving-messages
   return {
@@ -67,6 +67,7 @@ function getSlackMessageForProbe(trainingData: any) {
 }
 
 function getSlackMessageForAusfall() {
+  Logger.log(FORMAT + "Producing Slack canceled training message.", INFO, SLACK);
   return {
     "text": "Heute leider keine Probe :cry: \n <!channel> :beer:?"
   }
@@ -74,10 +75,10 @@ function getSlackMessageForAusfall() {
 
 function test_findProbenInfo_and_test_PostProbe() {
   const fakeToday = new Date();
-  fakeToday.setDate(16);
-  const data = findProbenInfo(fakeToday);
+  fakeToday.setDate(16); // <- Change this to the day of the month, which has a rehearsal
+  const data = findProbenInfo(fakeToday, true);
   if (data) {
-    sendAlert(getSlackMessageForProbe(data), getSlackHookTest(), false);
+    sendAlert(getSlackMessageForProbe(data), getSlackHookProben(true), false);
   }
 }
 
@@ -87,9 +88,9 @@ function test_postProbe() {
   data.location = "Merlin"
   data.trainer = "Joka"
   data.topic = "Probenbeteiligung";
-  sendAlert(getSlackMessageForProbe(data), getSlackHookTest(), false);
+  sendAlert(getSlackMessageForProbe(data), getSlackHookProben(true), false);
 }
 
 function test_postAusfall() {
-  sendAlert(getSlackMessageForAusfall(), getSlackHookTest(), false);
+  sendAlert(getSlackMessageForAusfall(), getSlackHookProben(true), false);
 }

@@ -7,21 +7,18 @@
 
 const reminders = [60, 180, 24*60];
 
-function testing() {
-  const spreadsheet = SpreadsheetApp.openById(getPlanningSheetID());
-  const sheet = spreadsheet.getSheetByName(getTrainingSheetName()) as GoogleAppsScript.Spreadsheet.Sheet;
-  const header = getHeaderOfSheet(sheet);
-  sortSheet(sheet, header['Datum'], false);
+function test_updateAllTrainings() {
+  updateAllTrainings(true);
 }
 
-function updateAllTrainings() {
+function updateAllTrainings(dev = false) {
   // Get the right TAB
-  const spreadsheet = SpreadsheetApp.openById(getPlanningSheetID());
+  const spreadsheet = SpreadsheetApp.openById(getPlanningSheetID(dev));
   const sheet = spreadsheet.getSheetByName(getTrainingSheetName()) as GoogleAppsScript.Spreadsheet.Sheet;
   // Get Headers
   const header = getHeaderOfSheet(sheet);
   // Get Calendar
-  const calendar = CalendarApp.getCalendarById(getCalendarID());
+  const calendar = CalendarApp.getCalendarById(getCalendarID(dev));
   sortSheet(sheet, header['Datum'], false);
   const lastRow = sheet.getLastRow();
   const now = new Date().getTime();
@@ -34,11 +31,11 @@ function updateAllTrainings() {
       return;
     }
     // Else we Create/Update/Delete Events based on the data
-    createOrUpdateEventForTrainingRow(sheet, header, i, calendar);
+    createOrUpdateEventForTrainingRow(sheet, header, i, calendar, dev);
   }
 }
 
-function createOrUpdateEventForTrainingRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number, calendar: GoogleAppsScript.Calendar.Calendar): string | undefined{
+function createOrUpdateEventForTrainingRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number, calendar: GoogleAppsScript.Calendar.Calendar, dev = false): string | undefined{
   var eventId = sheet.getRange(rowNr, header['ID']).getValue();
   var status = sheet.getRange(rowNr, header['Status']).getValue();
   if (status == 'fällt aus') {
@@ -54,18 +51,18 @@ function createOrUpdateEventForTrainingRow(sheet: GoogleAppsScript.Spreadsheet.S
   if (!eventId) {
     // No ID = New Event
     Logger.log(FORMAT + 'eventId not present for Row %s. Creating new Event.', INFO, PROBEN, rowNr);
-    eventId = trainingRowToCalendarEvent(sheet, header, rowNr, calendar);
+    eventId = trainingRowToCalendarEvent(sheet, header, rowNr, calendar, dev);
     sheet.getRange(rowNr, header['ID']).setValue(eventId);
     return eventId;
   }
   // We have an event ID for this row, check for updates
   Logger.log(FORMAT + 'eventId present for Row %s. Checking to update event.', TRACE, PROBEN, rowNr);
-  checkAndUpdateTrainingRowEvent(sheet, header, rowNr, calendar, eventId);
+  checkAndUpdateTrainingRowEvent(sheet, header, rowNr, calendar, eventId, dev);
   return eventId;
 }
 
 // This function creates new Events based on the passed data
-function trainingRowToCalendarEvent(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number, calendar: GoogleAppsScript.Calendar.Calendar): string {
+function trainingRowToCalendarEvent(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number, calendar: GoogleAppsScript.Calendar.Calendar, dev = false): string {
   const data = getDataFromTrainingRow(sheet, header, rowNr);
   // create event with all necessities
   const event = calendar.createEvent(
@@ -80,12 +77,12 @@ function trainingRowToCalendarEvent(sheet: GoogleAppsScript.Spreadsheet.Sheet, h
   }
   if (data.type === 'Impro-Jam') {
     // Invites the open calendar to the public event.
-    event.addGuest(getJamGuestEmail());
+    event.addGuest(getJamGuestEmail(dev));
   }
   return event.getId();
 }
 
-function checkAndUpdateTrainingRowEvent(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number, calendar: GoogleAppsScript.Calendar.Calendar, eventId: string) {
+function checkAndUpdateTrainingRowEvent(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number, calendar: GoogleAppsScript.Calendar.Calendar, eventId: string, dev = false) {
   const event = calendar.getEventById(eventId);
   const dataNow = getDataFromTrainingRow(sheet, header, rowNr);
   
@@ -107,17 +104,17 @@ function checkAndUpdateTrainingRowEvent(sheet: GoogleAppsScript.Spreadsheet.Shee
   }
   if (dataNow.type === 'Impro-Jam') {
     // It is a JAM
-    if (event.getGuestByEmail(getJamGuestEmail()) == null) {
+    if (event.getGuestByEmail(getJamGuestEmail(dev)) == null) {
       // Guest is not yet inivited -> invite
-      event.addGuest(getJamGuestEmail());
-      Logger.log(FORMAT + 'Event %s is a jam, added guest %s', DEBUG, PROBEN, event.getId(), getJamGuestEmail());
+      event.addGuest(getJamGuestEmail(dev));
+      Logger.log(FORMAT + 'Event %s is a jam, added guest %s', DEBUG, PROBEN, event.getId(), getJamGuestEmail(dev));
     }
   } else {
     // It is not a JAM
-    if (event.getGuestByEmail(getJamGuestEmail()) != null) {
+    if (event.getGuestByEmail(getJamGuestEmail(dev)) != null) {
       // Guest is invited, but it is not public -> remove
-      event.removeGuest(getJamGuestEmail());
-      Logger.log(FORMAT + 'Event %s is not a jam (anymore?), removed guest %s', DEBUG, PROBEN, event.getId(), getJamGuestEmail());
+      event.removeGuest(getJamGuestEmail(dev));
+      Logger.log(FORMAT + 'Event %s is not a jam (anymore?), removed guest %s', DEBUG, PROBEN, event.getId(), getJamGuestEmail(dev));
     }
   }
 }

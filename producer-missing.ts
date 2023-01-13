@@ -16,11 +16,11 @@ function testProducerMissing() {
   data.startDate = new Date(Date.now() + 600000);
   data.eventName = format + ' (' + data.location + '), ' + status;
   data.notes = notes;
-  sendAlert(getSlackMessageProducerMissing(data), getSlackHookTest(), false);
+  sendAlert(getSlackMessageProducerMissing(data, true), getSlackHookAllgemein(true), false);
 }
 
-function producerMissing(showData) {
-  sendAlert(getSlackMessageProducerMissing(showData), getSlackHookAllgemein(), true);
+function producerMissing(showData, dev = false) {
+  sendAlert(getSlackMessageProducerMissing(showData, dev), getSlackHookAllgemein(dev), true);
 }
 
 function formatDateForHumans(date) {
@@ -34,7 +34,7 @@ function formatTimeForHumans(date) {
    + ":" + padNumber(date.getMinutes(), 2);
 }
 
-function getSlackMessageProducerMissing(showData) {
+function getSlackMessageProducerMissing(showData, dev = false) {
   Logger.log(FORMAT + "Producing Slack alert for missing producer on '%s' (%s)!", INFO, SLACK, showData.startDate, showData.eventName);
 
   const showStart = new Date(showData.startDate);
@@ -80,7 +80,7 @@ function getSlackMessageProducerMissing(showData) {
         "type": "section",
         "text": {
           "type": "mrkdwn",
-          "text": "*Los Jetzt!* @channel\n" + getLinkToSpreadsheet()
+          "text": "*Los Jetzt!* @channel\n" + getLinkToSpreadsheet(dev)
         }
       }
     ]

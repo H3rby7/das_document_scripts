@@ -7,26 +7,24 @@
 /// <reference path="producer-missing.ts" />
 /// <reference path="global functions.ts" />
 
-function test() {
-  const spreadsheet = SpreadsheetApp.openById(getPlanningSheetID());
-  const sheet = spreadsheet.getSheetByName('testCopy') as GoogleAppsScript.Spreadsheet.Sheet;
-  const header = getHeaderOfSheet(sheet);
+function test_updateAllShows() {
+  updateAllShows(true);
 }
 
-function updateAllShows() {
-  const spreadsheet = SpreadsheetApp.openById(getPlanningSheetID());
+function updateAllShows(dev = false) {
+  const spreadsheet = SpreadsheetApp.openById(getPlanningSheetID(dev));
   const sheet = spreadsheet.getSheetByName(getPlanningSheetName()) as GoogleAppsScript.Spreadsheet.Sheet;
   const header = getHeaderOfSheet(sheet);
-  const calendar = CalendarApp.getCalendarById(getCalendarID());
+  const calendar = CalendarApp.getCalendarById(getCalendarID(dev));
   sortSheet(sheet, header['Start'], true);
   const lastRow = sheet.getLastRow();
   //Tables start with index 1, we ignore the header row as well, which makes it start at 2
   for (var i = 2; i <= lastRow; i++) {
-    createOrUpdateEventForShowRow(sheet, header, i, calendar);
+    createOrUpdateEventForShowRow(sheet, header, i, calendar, dev);
   }
 }
 
-function createOrUpdateEventForShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number, calendar: GoogleAppsScript.Calendar.Calendar) {
+function createOrUpdateEventForShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number, calendar: GoogleAppsScript.Calendar.Calendar, dev = false) {
   // Check if the event has passed already
   if (isShowEventInThePast(sheet, header, rowNr)) {
     Logger.log(FORMAT + 'skipping old show: %s', TRACE, AUFTRITTE, rowNr);
@@ -58,11 +56,11 @@ function createOrUpdateEventForShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet
     checkAndUpdateShowRowEvent(showData, calendar.getId(), eventId);
   }
 
-  alertProducerMissingIfNecessary(showData);
+  alertProducerMissingIfNecessary(showData, dev);
 
 }
 
-function alertProducerMissingIfNecessary(showData: any) {
+function alertProducerMissingIfNecessary(showData: any, dev = false) {
 
   if (showData.producer && showData.producer != "") {
     Logger.log(FORMAT + "Event on '%s' (%s) has a producer", TRACE, AUFTRITTE, showData.startDate, showData.eventName);
@@ -79,7 +77,7 @@ function alertProducerMissingIfNecessary(showData: any) {
   Logger.log(FORMAT + "Event on '%s' (%s) needs a producer!", DEBUG, AUFTRITTE, showData.startDate, showData.eventName);
 
   if (shouldSendProducerMissingAlert(utcMillisShowStart)) {
-    producerMissing(showData);
+    producerMissing(showData, dev);
   } else {
     Logger.log(FORMAT + "Event on '%s' (%s) will not alert for a producer on this invocation...", DEBUG, AUFTRITTE, showData.startDate, showData.eventName);
   }
