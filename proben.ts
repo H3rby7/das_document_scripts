@@ -35,7 +35,7 @@ function updateAllTrainings(dev = false) {
   }
 }
 
-function createOrUpdateEventForTrainingRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number, calendar: GoogleAppsScript.Calendar.Calendar, dev = false): string | undefined {
+function createOrUpdateEventForTrainingRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: Header, rowNr: number, calendar: GoogleAppsScript.Calendar.Calendar, dev = false): string | undefined {
   let eventId = sheet.getRange(rowNr, header['ID']).getValue();
   const status = sheet.getRange(rowNr, header['Status']).getValue();
   if (status == 'fällt aus') {
@@ -62,7 +62,7 @@ function createOrUpdateEventForTrainingRow(sheet: GoogleAppsScript.Spreadsheet.S
 }
 
 // This function creates new Events based on the passed data
-function trainingRowToCalendarEvent(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number, calendar: GoogleAppsScript.Calendar.Calendar, dev = false): string {
+function trainingRowToCalendarEvent(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: Header, rowNr: number, calendar: GoogleAppsScript.Calendar.Calendar, dev = false): string {
   const data = getDataFromTrainingRow(sheet, header, rowNr);
   // create event with all necessities
   const event = calendar.createEvent(
@@ -82,7 +82,7 @@ function trainingRowToCalendarEvent(sheet: GoogleAppsScript.Spreadsheet.Sheet, h
   return event.getId();
 }
 
-function checkAndUpdateTrainingRowEvent(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number, calendar: GoogleAppsScript.Calendar.Calendar, eventId: string, dev = false) {
+function checkAndUpdateTrainingRowEvent(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: Header, rowNr: number, calendar: GoogleAppsScript.Calendar.Calendar, eventId: string, dev = false) {
   const event = calendar.getEventById(eventId);
   const dataNow = getDataFromTrainingRow(sheet, header, rowNr);
   
@@ -120,7 +120,7 @@ function checkAndUpdateTrainingRowEvent(sheet: GoogleAppsScript.Spreadsheet.Shee
 }
 
 // CORE function, retrieves all data and puts it into one object for simple useage
-function getDataFromTrainingRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number): any {
+function getDataFromTrainingRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: Header, rowNr: number): any {
   const data: any = {};
   //get data from row
   const type = sheet.getRange(rowNr, header['Probenform']).getValue();

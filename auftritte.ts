@@ -25,7 +25,7 @@ function updateAllShows(dev = false) {
   }
 }
 
-function createOrUpdateEventForShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number, calendar: GoogleAppsScript.Calendar.Calendar, dev = false) {
+function createOrUpdateEventForShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: Header, rowNr: number, calendar: GoogleAppsScript.Calendar.Calendar, dev = false) {
   // Check if the event has passed already
   if (isShowEventInThePast(sheet, header, rowNr)) {
     Logger.log(FORMAT + 'skipping old show: %s', TRACE, AUFTRITTE, rowNr);
@@ -61,7 +61,7 @@ function createOrUpdateEventForShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet
 
 }
 
-function getDataFromShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number): any {
+function getDataFromShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: Header, rowNr: number): any {
   const data: any = {};
   //get data from row
   const startDate = sheet.getRange(rowNr, header['Start']).getValue();
@@ -90,7 +90,7 @@ function getDataFromShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: a
   return data;
 }
 
-function isShowEventInThePast(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number): boolean {
+function isShowEventInThePast(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: Header, rowNr: number): boolean {
   const eventStart = sheet.getRange(rowNr, header['Start']).getValue();
   if (!eventStart) {
     Logger.log(FORMAT + 'Event at row: %s has no value for column START!', WARN, AUFTRITTE, rowNr);

@@ -1,9 +1,13 @@
 /// <reference path="node_modules/@types/google-apps-script/google-apps-script.spreadsheet.d.ts" />
 /// <reference path="node_modules/@types/google-apps-script/google-apps-script.base.d.ts" />
 
-function getHeaderOfSheet(sheet: GoogleAppsScript.Spreadsheet.Sheet): any {
+type Header = {
+  [key: string]: number;
+}
+
+function getHeaderOfSheet(sheet: GoogleAppsScript.Spreadsheet.Sheet): Header {
   const data = sheet.getDataRange().getValues();
-  const header = {};
+  const header: Header = {};
   const headerRow = data[0];
   if (!headerRow) return {};
   for (let i = 0; i < headerRow.length; i++) {
