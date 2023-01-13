@@ -55,23 +55,3 @@ function getCalendarID(dev = false): string {
 function getJamGuestEmail(dev = false): string {
   return PropertiesService.getScriptProperties().getProperty(`${dev ? 'test_' : ''}jamGuestEmail`) as string;
 }
-
-
-function printProperties() {
-  const properties = PropertiesService.getScriptProperties();
-  const keys = properties.getKeys();
-  keys.sort().forEach(key => {
-    Logger.log("'%s': '%s'", key, properties.getProperty(key));
-  })
-}
-
-function configure() {
-  Logger.log("\n\n============= Previous Properties =============");
-  printProperties();
-
-  // PropertiesService.getScriptProperties().setProperty("myKey", "myValue");
-  // PropertiesService.getScriptProperties().deleteProperty("myKey");
-  
-  Logger.log("\n\n============= New Properties =============");
-  printProperties();
-}
