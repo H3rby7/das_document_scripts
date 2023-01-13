@@ -13,7 +13,7 @@ function getAndPostTodaysProbenInfo() {
     // no info on today, do nothing.
     return;
   }
-  var content;
+  let content;
   if (data.status == "fällt aus") {
     content = getSlackMessageForAusfall();
   } else {
@@ -43,7 +43,7 @@ function findProbenInfo(searchDate: Date, dev = false): any {
 }
 
 function findIndexOfDate(array2d: any[][], dateToFind: Date): number {
-  for (var i = 0; i < array2d.length; i++) {
+  for (let i = 0; i < array2d.length; i++) {
     const rowDate = new Date(array2d[i][0]);
     if (areDatesEqualDayOnly(rowDate, dateToFind)) {
       return i;
@@ -82,7 +82,7 @@ function test_findProbenInfo_and_test_PostProbe() {
 }
 
 function test_postProbe() {
-  var data: any = {};
+  const data: any = {};
   data.startDate = new Date();
   data.location = "Merlin"
   data.trainer = "Joka"

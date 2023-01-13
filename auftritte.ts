@@ -20,7 +20,7 @@ function updateAllShows(dev = false) {
   sortSheet(sheet, header['Start'], true);
   const lastRow = sheet.getLastRow();
   //Tables start with index 1, we ignore the header row as well, which makes it start at 2
-  for (var i = 2; i <= lastRow; i++) {
+  for (let i = 2; i <= lastRow; i++) {
     createOrUpdateEventForShowRow(sheet, header, i, calendar, dev);
   }
 }
@@ -34,8 +34,8 @@ function createOrUpdateEventForShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet
 
   // Check for event status.
   // Delete event if 'canceled'
-  var eventId = sheet.getRange(rowNr, header['ID']).getValue();
-  var status = sheet.getRange(rowNr, header['Status']).getValue();
+  const eventId = sheet.getRange(rowNr, header['ID']).getValue();
+  const status = sheet.getRange(rowNr, header['Status']).getValue();
   if (status == 'abgesagt') {
     if (!eventId) {
       return;
@@ -50,7 +50,7 @@ function createOrUpdateEventForShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet
   const showData = getDataFromShowRow(sheet, header, rowNr);
   if (!eventId) {
     Logger.log(FORMAT + 'eventId not present for row: %s. Creating new Event.', INFO, AUFTRITTE, rowNr);
-    var event = showRowToCalendarEvent(showData, calendar);
+    const event = showRowToCalendarEvent(showData, calendar);
     sheet.getRange(rowNr, header['ID']).setValue(event.getId());
   } else {
     Logger.log(FORMAT + 'eventId present for row: %s. Checking to update event.', TRACE, AUFTRITTE, rowNr);
@@ -62,11 +62,11 @@ function createOrUpdateEventForShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet
 }
 
 function getDataFromShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number): any {
-  var data: any = {};
+  const data: any = {};
   //get data from row
   const startDate = sheet.getRange(rowNr, header['Start']).getValue();
-  var minutesToMeetBeforeShow = sheet.getRange(rowNr, header['Treffen (vorher MIN)']).getValue();
-  var duration = sheet.getRange(rowNr, header['Dauer (MIN)']).getValue();
+  let minutesToMeetBeforeShow = sheet.getRange(rowNr, header['Treffen (vorher MIN)']).getValue();
+  let duration = sheet.getRange(rowNr, header['Dauer (MIN)']).getValue();
   const format = sheet.getRange(rowNr, header['Format']).getValue();
   const status = sheet.getRange(rowNr, header['Status']).getValue();
   const producer = sheet.getRange(rowNr, header['Verantwortlich']).getValue();
@@ -91,12 +91,12 @@ function getDataFromShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: a
 }
 
 function isShowEventInThePast(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number): boolean {
-  var eventStart = sheet.getRange(rowNr, header['Start']).getValue();
+  const eventStart = sheet.getRange(rowNr, header['Start']).getValue();
   if (!eventStart) {
     Logger.log(FORMAT + 'Event at row: %s has no value for column START!', WARN, AUFTRITTE, rowNr);
     return true;
   }
-  var timestamp = eventStart.getTime();
+  const timestamp = eventStart.getTime();
   if (!timestamp) {
     Logger.log(FORMAT + 'Event at row: %s has no STARTING TIME!', WARN, AUFTRITTE, rowNr);
     return true;
@@ -123,7 +123,7 @@ function checkAndUpdateShowRowEvent(showData: any, calendarId: string, eventId: 
   const startDate = formatDateForEvent(showData.startDate);
   const endDate = formatDateForEvent(showData.endDate);
   
-  var postUpdate = false;
+  let postUpdate = false;
   if (!event.start) {
     Logger.log(FORMAT + 'Event: %s has no start!', WARN, AUFTRITTE, eventId);
     event.start = {};

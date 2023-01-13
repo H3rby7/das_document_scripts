@@ -63,7 +63,7 @@ function shouldSendProducerMissingAlert(utcMillisShowStart: number): boolean {
 }
 
 function test_producerMissingSlackMessage() {
-  var data: any = {};
+  const data: any = {};
   const format = 'TBD';
   const status = 'zugesagt';
   const notes = 'Fuß, Inder, Tür';

@@ -3,10 +3,10 @@
 
 function getHeaderOfSheet(sheet: GoogleAppsScript.Spreadsheet.Sheet): any {
   const data = sheet.getDataRange().getValues();
-  var header = {};
+  const header = {};
   const headerRow = data[0];
   if (!headerRow) return {};
-  for (var i = 0; i < headerRow.length; i++) {
+  for (let i = 0; i < headerRow.length; i++) {
     header[headerRow[i]] = Math.floor(i + 1);
   }
   return header;
@@ -34,7 +34,7 @@ function padText(text: string, width: number, padRight: boolean): string {
 }
 
 function padNumber(amount: number, width: number): string {
-  var padding = "";
+  let padding = "";
   while (padding.length < width - 1 && amount < Math.pow(10, width - padding.length - 1))
     padding += "0";
   return padding + amount.toString();
@@ -85,7 +85,7 @@ function areDatesEqualDayOnly(a: GoogleAppsScript.Base.Date, b: GoogleAppsScript
 
 function formatDateForEvent(date: GoogleAppsScript.Base.Date): string {
  date = date ? date : new Date();
- var offset = date.getTimezoneOffset();
+ const offset = date.getTimezoneOffset();
  return padNumber(date.getFullYear(), 4)
    + "-" + padNumber(date.getMonth() + 1, 2)
    + "-" + padNumber(date.getDate(), 2)

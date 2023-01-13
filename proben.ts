@@ -23,8 +23,8 @@ function updateAllTrainings(dev = false) {
   const lastRow = sheet.getLastRow();
   const now = new Date().getTime();
   //Tables start with index 1, we ignore the header row as well, which makes it start at 2
-  for (var i = 2; i <= lastRow; i++) {
-    var currentTraining = getDataFromTrainingRow(sheet, header, i);
+  for (let i = 2; i <= lastRow; i++) {
+    const currentTraining = getDataFromTrainingRow(sheet, header, i);
     // If the start time is BEFORE now we stop
     if (currentTraining.startDate.getTime() < now) {
       Logger.log(FORMAT + 'reached old trainings at row: %s, aborting mission', INFO, PROBEN, i);
@@ -36,8 +36,8 @@ function updateAllTrainings(dev = false) {
 }
 
 function createOrUpdateEventForTrainingRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number, calendar: GoogleAppsScript.Calendar.Calendar, dev = false): string | undefined {
-  var eventId = sheet.getRange(rowNr, header['ID']).getValue();
-  var status = sheet.getRange(rowNr, header['Status']).getValue();
+  let eventId = sheet.getRange(rowNr, header['ID']).getValue();
+  const status = sheet.getRange(rowNr, header['Status']).getValue();
   if (status == 'fällt aus') {
     // Check if we also have an ID
     if (!eventId) {
@@ -72,7 +72,7 @@ function trainingRowToCalendarEvent(sheet: GoogleAppsScript.Spreadsheet.Sheet, h
   )
   event.setDescription(data.description);
   event.setLocation(data.location);
-  for (var r in reminders) {
+  for (let r in reminders) {
     event.addPopupReminder(reminders[r]);
   }
   if (data.type === 'Impro-Jam') {
@@ -121,17 +121,17 @@ function checkAndUpdateTrainingRowEvent(sheet: GoogleAppsScript.Spreadsheet.Shee
 
 // CORE function, retrieves all data and puts it into one object for simple useage
 function getDataFromTrainingRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number): any {
-  var data: any = {};
+  const data: any = {};
   //get data from row
   const type = sheet.getRange(rowNr, header['Probenform']).getValue();
   const location = sheet.getRange(rowNr, header['Location']).getValue();
   const status = sheet.getRange(rowNr, header['Status']).getValue();
-  var durationInHours = sheet.getRange(rowNr, header['Dauer (in H)']).getValue();
+  const durationInHours = sheet.getRange(rowNr, header['Dauer (in H)']).getValue();
   const notes = sheet.getRange(rowNr, header['Notizen']).getValue();
-  var trainer = sheet.getRange(rowNr, header['Leitung']).getValue();
-  var topic = sheet.getRange(rowNr, header['Thema']).getValue();
+  let trainer = sheet.getRange(rowNr, header['Leitung']).getValue();
+  let topic = sheet.getRange(rowNr, header['Thema']).getValue();
   //make sure to have a duration
-  var duration = 120;
+  let duration = 120;
   if (durationInHours) {
     duration = durationInHours * 60;
   }
