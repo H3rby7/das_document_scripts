@@ -52,7 +52,7 @@ function findIndexOfDate(array2d: any[][], dateToFind: Date): number {
   return -1;
 }
 
-function getSlackMessageForProbe(trainingData: any): any {
+function getSlackMessageForProbe(trainingData: Rehearsal): SlackSimpleText {
   const trainingStart = new Date(trainingData.startDate);
   const date = formatDateForHumans(trainingStart);
   const time = formatTimeForHumans(trainingStart);
@@ -65,7 +65,7 @@ function getSlackMessageForProbe(trainingData: any): any {
   }
 }
 
-function getSlackMessageForAusfall(): any {
+function getSlackMessageForAusfall(): SlackSimpleText {
   Logger.log(FORMAT + "Producing Slack canceled training message.", INFO, PROBEN_INFO);
   return {
     "text": "Heute leider keine Probe :cry: \n <!channel> :beer:?"
@@ -82,11 +82,18 @@ function test_findProbenInfo_and_test_PostProbe() {
 }
 
 function test_postProbe() {
-  const data: any = {};
-  data.startDate = new Date();
-  data.location = "Merlin"
-  data.trainer = "Joka"
-  data.topic = "Probenbeteiligung";
+  const data: Rehearsal = {
+    startDate: new Date(),
+    location: "Merlin",
+    trainer: "Joka",
+    topic: "Probenbeteiligung",
+    description: "",
+    endDate: new Date(),
+    eventName: "evtName",
+    notes: "no notes",
+    status: "Findet statt",
+    type: "Orga"
+  };
   sendSlackAlert(getSlackMessageForProbe(data), getSlackHookProben(true), false);
 }
 

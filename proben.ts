@@ -7,6 +7,19 @@
 
 const reminders = [60, 180, 24*60];
 
+interface Rehearsal {
+  startDate: Date;
+  endDate: Date;
+  eventName: string;
+  description: string;
+  location: string;
+  type: string;
+  topic: string;
+  status: string;
+  trainer: string;
+  notes: string;
+}
+
 function test_updateAllTrainings() {
   updateAllTrainings(true);
 }
@@ -69,7 +82,7 @@ function trainingRowToCalendarEvent(sheet: GoogleAppsScript.Spreadsheet.Sheet, h
     data.eventName,
     data.startDate,
     data.endDate
-  )
+  );
   event.setDescription(data.description);
   event.setLocation(data.location);
   for (let r in reminders) {
@@ -120,8 +133,7 @@ function checkAndUpdateTrainingRowEvent(sheet: GoogleAppsScript.Spreadsheet.Shee
 }
 
 // CORE function, retrieves all data and puts it into one object for simple useage
-function getDataFromTrainingRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: Header, rowNr: number): any {
-  const data: any = {};
+function getDataFromTrainingRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: Header, rowNr: number): Rehearsal {
   //get data from row
   const type = sheet.getRange(rowNr, header['Probenform']).getValue();
   const location = sheet.getRange(rowNr, header['Location']).getValue();
@@ -142,16 +154,20 @@ function getDataFromTrainingRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, heade
     topic = 'Unbekanntes Thema';
   }
   //adjust dates for calendar
-  data.startDate = sheet.getRange(rowNr, header['Datum']).getValue();
-  data.endDate = new Date(data.startDate.getTime() + (duration * 60000));
-  data.eventName = type + ': ' + topic + ', ' + status + '';
-  data.description = 'Leitung: ' + trainer + '\n' + notes;
-  data.location = location;
-  // additional info
-  data.type = type;
-  data.topic = topic;
-  data.status = status;
-  data.trainer = trainer;
-  data.notes = notes;
-  return data;
+  const startDate = sheet.getRange(rowNr, header['Datum']).getValue();
+  const endDate = new Date(startDate.getTime() + (duration * 60000));
+  const eventName = type + ': ' + topic + ', ' + status + '';
+  const description = 'Leitung: ' + trainer + '\n' + notes;
+  return {
+    startDate,
+    endDate,
+    eventName,
+    description,
+    location,
+    type,
+    topic,
+    status,
+    trainer,
+    notes
+  };
 }

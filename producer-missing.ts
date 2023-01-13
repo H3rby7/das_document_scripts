@@ -1,29 +1,30 @@
 /// <reference path="node_modules/@types/google-apps-script/google-apps-script.base.d.ts" />
+/// <reference path="auftritte.ts" />
 /// <reference path="properties.ts" />
 /// <reference path="global-functions.ts" />
 /// <reference path="slack.ts" />
 /// <reference path="logging.ts" />
 
-function alertProducerMissingIfNecessary(showData: any, dev = false) {
+function alertProducerMissingIfNecessary(show: Show, dev = false) {
 
-  if (showData.producer && showData.producer != "") {
-    Logger.log(FORMAT + "Event on '%s' (%s) has a producer", TRACE, PRODUCER_MISSING, showData.startDate, showData.eventName);
+  if (show.producer && show.producer != "") {
+    Logger.log(FORMAT + "Event on '%s' (%s) has a producer", TRACE, PRODUCER_MISSING, show.startDate, show.eventName);
     return;
   }
 
   // Show has no producer, check if it is far enough away to not worry
-  const utcMillisShowStart = showData.startDate.valueOf();
+  const utcMillisShowStart = show.startDate.valueOf();
   if (!isWithinDays(utcMillisShowStart, 42)) {
-    Logger.log(FORMAT + "Event on '%s' (%s) is far enough in the future -> does not need a producer (yet)", TRACE, AUFTRITTE, showData.startDate, showData.eventName);
+    Logger.log(FORMAT + "Event on '%s' (%s) is far enough in the future -> does not need a producer (yet)", TRACE, AUFTRITTE, show.startDate, show.eventName);
     return;
   }
   // Show is imminent and has no producer... ALARM!
-  Logger.log(FORMAT + "Event on '%s' (%s) needs a producer!", DEBUG, PRODUCER_MISSING, showData.startDate, showData.eventName);
+  Logger.log(FORMAT + "Event on '%s' (%s) needs a producer!", DEBUG, PRODUCER_MISSING, show.startDate, show.eventName);
 
   if (shouldSendProducerMissingAlert(utcMillisShowStart)) {
-    producerMissing(showData, dev);
+    producerMissing(show, dev);
   } else {
-    Logger.log(FORMAT + "Event on '%s' (%s) will not alert for a producer on this invocation...", DEBUG, PRODUCER_MISSING, showData.startDate, showData.eventName);
+    Logger.log(FORMAT + "Event on '%s' (%s) will not alert for a producer on this invocation...", DEBUG, PRODUCER_MISSING, show.startDate, show.eventName);
   }
 }
 
@@ -63,28 +64,30 @@ function shouldSendProducerMissingAlert(utcMillisShowStart: number): boolean {
 }
 
 function test_producerMissingSlackMessage() {
-  const data: any = {};
-  const format = 'TBD';
-  const status = 'zugesagt';
-  const notes = 'Fuß, Inder, Tür';
+  const location = 'Virtual Testroom';
+  const startDate = new Date(Date.now() + 600000);
   
+  const data: Show = {
+    startDate,
+    endDate: new Date(startDate.getUTCMilliseconds() + 1200000),
+    eventName: 'TBD (' + location + '), zugesagt',
+    location,
+    notes: 'Fuß, Inder, Tür',
+    producer: "Chaplin",
+    description: "descr"
+  };
 
-  //adjust dates for calendar
-  data.location = 'Virtual Testroom';
-  data.startDate = new Date(Date.now() + 600000);
-  data.eventName = format + ' (' + data.location + '), ' + status;
-  data.notes = notes;
   sendSlackAlert(getSlackMessageProducerMissing(data, true), getSlackHookAllgemein(true), false);
 }
 
-function producerMissing(showData: any, dev = false) {
-  sendSlackAlert(getSlackMessageProducerMissing(showData, dev), getSlackHookAllgemein(dev), true);
+function producerMissing(show: Show, dev = false) {
+  sendSlackAlert(getSlackMessageProducerMissing(show, dev), getSlackHookAllgemein(dev), true);
 }
 
-function getSlackMessageProducerMissing(showData: any, dev = false): any {
-  Logger.log(FORMAT + "Producing Slack alert for missing producer on '%s' (%s)!", INFO, PRODUCER_MISSING, showData.startDate, showData.eventName);
+function getSlackMessageProducerMissing(show: Show, dev = false): SlackBlocks {
+  Logger.log(FORMAT + "Producing Slack alert for missing producer on '%s' (%s)!", INFO, PRODUCER_MISSING, show.startDate, show.eventName);
 
-  const showStart = new Date(showData.startDate);
+  const showStart = new Date(show.startDate);
   const date = formatDateForHumans(showStart);
   const time = formatTimeForHumans(showStart);
 
@@ -95,7 +98,7 @@ function getSlackMessageProducerMissing(showData: any, dev = false): any {
         "type": "section",
         "text": {
           "type": "mrkdwn",
-          "text": "*Producer fehlt für Auftritt am " + date + " um " + time + " Uhr, Location: " + showData.location + "!*"
+          "text": "*Producer fehlt für Auftritt am " + date + " um " + time + " Uhr, Location: " + show.location + "!*"
         }
       },
       {
