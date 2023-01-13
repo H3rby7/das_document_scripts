@@ -1,6 +1,7 @@
 /// <reference path="node_modules/@types/google-apps-script/google-apps-script.spreadsheet.d.ts" />
+/// <reference path="node_modules/@types/google-apps-script/google-apps-script.base.d.ts" />
 
-function getHeaderOfSheet(sheet: GoogleAppsScript.Spreadsheet.Sheet) {
+function getHeaderOfSheet(sheet: GoogleAppsScript.Spreadsheet.Sheet): any {
   const data = sheet.getDataRange().getValues();
   var header = {};
   const headerRow = data[0];
@@ -18,7 +19,7 @@ function sortSheet(sheet: GoogleAppsScript.Spreadsheet.Sheet, column: number, as
   range.sort({column: column, ascending: ascending});
 }
 
-function padText(text: string, width: number, padRight: boolean) {
+function padText(text: string, width: number, padRight: boolean): string {
   if(text.length > width) {
     return text.slice(text.length - width);
   }
@@ -32,7 +33,7 @@ function padText(text: string, width: number, padRight: boolean) {
   return text;
 }
 
-function padNumber(amount: number, width: number) {
+function padNumber(amount: number, width: number): string {
   var padding = "";
   while (padding.length < width - 1 && amount < Math.pow(10, width - padding.length - 1))
     padding += "0";
@@ -47,7 +48,7 @@ function test_areDatesEqual() {
   Logger.log(eq);
 }
 
-function areDatesEqual(a, b) {
+function areDatesEqual(a: GoogleAppsScript.Base.Date, b: GoogleAppsScript.Base.Date): boolean {
   if (!areDatesEqualDayOnly(a, b)) {
     return false;
   }
@@ -66,7 +67,7 @@ function areDatesEqual(a, b) {
   return true;
 }
 
-function areDatesEqualDayOnly(a, b) {
+function areDatesEqualDayOnly(a: GoogleAppsScript.Base.Date, b: GoogleAppsScript.Base.Date): boolean {
   if (a.getTimezoneOffset() != b.getTimezoneOffset()) {
     return false;
   }
@@ -82,7 +83,7 @@ function areDatesEqualDayOnly(a, b) {
   return true;
 }
 
-function formatDateForEvent(date) {
+function formatDateForEvent(date: GoogleAppsScript.Base.Date): string {
  date = date ? date : new Date();
  var offset = date.getTimezoneOffset();
  return padNumber(date.getFullYear(), 4)
@@ -96,21 +97,21 @@ function formatDateForEvent(date) {
    + ":" + padNumber(Math.abs(offset) % 60, 2);
 }
 
-function formatDateForHumans(date) {
+function formatDateForHumans(date: GoogleAppsScript.Base.Date): string {
   return padNumber(date.getDate(), 2)
   + "." + padNumber(date.getMonth() + 1, 2)
   + "." + padNumber(date.getFullYear(), 4);
 }
 
-function formatTimeForHumans(date) {
+function formatTimeForHumans(date: GoogleAppsScript.Base.Date): string {
  return padNumber(date.getHours(), 2)
    + ":" + padNumber(date.getMinutes(), 2);
 }
 
-function daysToMillis(dayCount: number) {
+function daysToMillis(dayCount: number): number {
   return dayCount * 24 * 60 * 60 * 1000;
 }
 
-function isWithinDays(utcMillisToCheck: number, dayCount: number) {
+function isWithinDays(utcMillisToCheck: number, dayCount: number): boolean {
   return utcMillisToCheck < (Date.now() + daysToMillis(dayCount))
 }

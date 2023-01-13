@@ -22,7 +22,7 @@ function getAndPostTodaysProbenInfo() {
   sendSlackAlert(content, getSlackHookProben(false), true);
 }
 
-function findProbenInfo(searchDate: Date, dev = false) {
+function findProbenInfo(searchDate: Date, dev = false): any {
   // Get the right TAB
   const spreadsheet = SpreadsheetApp.openById(getPlanningSheetID(dev));
   const sheet = spreadsheet.getSheetByName(getTrainingSheetName()) as GoogleAppsScript.Spreadsheet.Sheet;
@@ -36,13 +36,13 @@ function findProbenInfo(searchDate: Date, dev = false) {
 
   const matchingDataIndex = findIndexOfDate(dates, searchDate);
   if (matchingDataIndex < 0) {
-    Logger.log(FORMAT + "Attempted to find training for %s, but none was present!", WARN, SLACK, searchDate.toDateString());
+    Logger.log(FORMAT + "Attempted to find training for %s, but none was present!", WARN, PROBEN_INFO, searchDate.toDateString());
     return null;
   }
   return getDataFromTrainingRow(sheet, header, matchingDataIndex + firstDataRow);
 }
 
-function findIndexOfDate(array2d, dateToFind) {
+function findIndexOfDate(array2d: any[][], dateToFind: Date): number {
   for (var i = 0; i < array2d.length; i++) {
     const rowDate = new Date(array2d[i][0]);
     if (areDatesEqualDayOnly(rowDate, dateToFind)) {
@@ -52,12 +52,12 @@ function findIndexOfDate(array2d, dateToFind) {
   return -1;
 }
 
-function getSlackMessageForProbe(trainingData: any) {
+function getSlackMessageForProbe(trainingData: any): any {
   const trainingStart = new Date(trainingData.startDate);
   const date = formatDateForHumans(trainingStart);
   const time = formatTimeForHumans(trainingStart);
 
-  Logger.log(FORMAT + "Producing Slack information for today's (%s) training at %s!", INFO, SLACK, date, time);
+  Logger.log(FORMAT + "Producing Slack information for today's (%s) training at %s!", INFO, PROBEN_INFO, date, time);
 
   // https://api.slack.com/reference/surfaces/formatting#retrieving-messages
   return {
@@ -65,8 +65,8 @@ function getSlackMessageForProbe(trainingData: any) {
   }
 }
 
-function getSlackMessageForAusfall() {
-  Logger.log(FORMAT + "Producing Slack canceled training message.", INFO, SLACK);
+function getSlackMessageForAusfall(): any {
+  Logger.log(FORMAT + "Producing Slack canceled training message.", INFO, PROBEN_INFO);
   return {
     "text": "Heute leider keine Probe :cry: \n <!channel> :beer:?"
   }

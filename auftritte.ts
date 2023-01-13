@@ -61,7 +61,7 @@ function createOrUpdateEventForShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet
 
 }
 
-function getDataFromShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number) {
+function getDataFromShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number): any {
   var data: any = {};
   //get data from row
   const startDate = sheet.getRange(rowNr, header['Start']).getValue();
@@ -90,15 +90,21 @@ function getDataFromShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: a
   return data;
 }
 
-function isShowEventInThePast(sheet, header, rowNr) {
+function isShowEventInThePast(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number): boolean {
   var eventStart = sheet.getRange(rowNr, header['Start']).getValue();
-  if (!eventStart) return;
+  if (!eventStart) {
+    Logger.log(FORMAT + 'Event at row: %s has no value for column START!', WARN, AUFTRITTE, rowNr);
+    return true;
+  }
   var timestamp = eventStart.getTime();
-  if (!timestamp) return;
+  if (!timestamp) {
+    Logger.log(FORMAT + 'Event at row: %s has no STARTING TIME!', WARN, AUFTRITTE, rowNr);
+    return true;
+  }
   return new Date().getTime() > timestamp;
 }
 
-function showRowToCalendarEvent(showData, calendar) {
+function showRowToCalendarEvent(showData: any, calendar: GoogleAppsScript.Calendar.Calendar): GoogleAppsScript.Calendar.CalendarEvent {
   // create event with all necessities
   const event = calendar.createEvent(
     showData.eventName,
@@ -119,11 +125,11 @@ function checkAndUpdateShowRowEvent(showData: any, calendarId: string, eventId: 
   
   var postUpdate = false;
   if (!event.start) {
-    Logger.log(FORMAT + 'Event: %s has no start!', WARN, EVENTS, eventId);
+    Logger.log(FORMAT + 'Event: %s has no start!', WARN, AUFTRITTE, eventId);
     event.start = {};
   }
   if (!event.end) {
-    Logger.log(FORMAT + 'Event: %s has no end!', WARN, EVENTS, eventId);
+    Logger.log(FORMAT + 'Event: %s has no end!', WARN, AUFTRITTE, eventId);
     event.end = {};
   }
   if (event.summary !== showData.eventName) {
@@ -147,10 +153,10 @@ function checkAndUpdateShowRowEvent(showData: any, calendarId: string, eventId: 
     postUpdate = true;
   }
   if(postUpdate) {
-    Logger.log(FORMAT + 'updating event: %s. Checking to update event.', INFO, EVENTS, eventId);
+    Logger.log(FORMAT + 'updating event: %s. Checking to update event.', INFO, AUFTRITTE, eventId);
   	cEvents.update(event, calendarId, strippedId);
   } else {
-    Logger.log(FORMAT + 'Event did not change: %s', TRACE, EVENTS, eventId);
+    Logger.log(FORMAT + 'Event did not change: %s', TRACE, AUFTRITTE, eventId);
   }
   return postUpdate;
 }

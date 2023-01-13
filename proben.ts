@@ -35,7 +35,7 @@ function updateAllTrainings(dev = false) {
   }
 }
 
-function createOrUpdateEventForTrainingRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number, calendar: GoogleAppsScript.Calendar.Calendar, dev = false): string | undefined{
+function createOrUpdateEventForTrainingRow(sheet: GoogleAppsScript.Spreadsheet.Sheet, header: any, rowNr: number, calendar: GoogleAppsScript.Calendar.Calendar, dev = false): string | undefined {
   var eventId = sheet.getRange(rowNr, header['ID']).getValue();
   var status = sheet.getRange(rowNr, header['Status']).getValue();
   if (status == 'fällt aus') {

@@ -7,7 +7,7 @@
 function alertProducerMissingIfNecessary(showData: any, dev = false) {
 
   if (showData.producer && showData.producer != "") {
-    Logger.log(FORMAT + "Event on '%s' (%s) has a producer", TRACE, AUFTRITTE, showData.startDate, showData.eventName);
+    Logger.log(FORMAT + "Event on '%s' (%s) has a producer", TRACE, PRODUCER_MISSING, showData.startDate, showData.eventName);
     return;
   }
 
@@ -18,12 +18,12 @@ function alertProducerMissingIfNecessary(showData: any, dev = false) {
     return;
   }
   // Show is imminent and has no producer... ALARM!
-  Logger.log(FORMAT + "Event on '%s' (%s) needs a producer!", DEBUG, AUFTRITTE, showData.startDate, showData.eventName);
+  Logger.log(FORMAT + "Event on '%s' (%s) needs a producer!", DEBUG, PRODUCER_MISSING, showData.startDate, showData.eventName);
 
   if (shouldSendProducerMissingAlert(utcMillisShowStart)) {
     producerMissing(showData, dev);
   } else {
-    Logger.log(FORMAT + "Event on '%s' (%s) will not alert for a producer on this invocation...", DEBUG, AUFTRITTE, showData.startDate, showData.eventName);
+    Logger.log(FORMAT + "Event on '%s' (%s) will not alert for a producer on this invocation...", DEBUG, PRODUCER_MISSING, showData.startDate, showData.eventName);
   }
 }
 
@@ -34,7 +34,7 @@ function alertProducerMissingIfNecessary(showData: any, dev = false) {
    * Within 28 days to 14 days it will add another reminder to tuesday [weekday #2] at 7pm.
    * Within 14 days turns into a daily reminder at 7pm.
    */
-function shouldSendProducerMissingAlert(utcMillisShowStart: number) {
+function shouldSendProducerMissingAlert(utcMillisShowStart: number): boolean {
   const today = new Date();
   const weekDay = today.getDay();
   const time = today.getHours();
@@ -77,12 +77,12 @@ function test_producerMissingSlackMessage() {
   sendSlackAlert(getSlackMessageProducerMissing(data, true), getSlackHookAllgemein(true), false);
 }
 
-function producerMissing(showData, dev = false) {
+function producerMissing(showData: any, dev = false) {
   sendSlackAlert(getSlackMessageProducerMissing(showData, dev), getSlackHookAllgemein(dev), true);
 }
 
-function getSlackMessageProducerMissing(showData, dev = false) {
-  Logger.log(FORMAT + "Producing Slack alert for missing producer on '%s' (%s)!", INFO, SLACK, showData.startDate, showData.eventName);
+function getSlackMessageProducerMissing(showData: any, dev = false): any {
+  Logger.log(FORMAT + "Producing Slack alert for missing producer on '%s' (%s)!", INFO, PRODUCER_MISSING, showData.startDate, showData.eventName);
 
   const showStart = new Date(showData.startDate);
   const date = formatDateForHumans(showStart);
