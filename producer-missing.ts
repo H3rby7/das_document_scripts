@@ -14,7 +14,7 @@ function alertProducerMissingIfNecessary(show: Show, dev = false) {
 
   // Show has no producer, check if it is far enough away to not worry
   const utcMillisShowStart = show.startDate.valueOf();
-  if (!isWithinDays(utcMillisShowStart, 42)) {
+  if (!isWithinDays(utcMillisShowStart, 90)) {
     Logger.log(FORMAT + "Event on '%s' (%s) is far enough in the future -> does not need a producer (yet)", TRACE, AUFTRITTE, show.startDate, show.eventName);
     return;
   }
@@ -30,9 +30,9 @@ function alertProducerMissingIfNecessary(show: Show, dev = false) {
 
 /**
    * Alert Slack, according to some rules:
-   * 
-   * Within 42 to 28 days, it is only a weekly reminder on Saturday [weekday #6] at 12AM.
-   * Within 28 days to 14 days it will add another reminder to tuesday [weekday #2] at 7pm.
+   *
+   * Within 90 to 31 days, it is only a weekly reminder on Saturday [weekday #6] at 12AM.
+   * Within 31 days to 14 days it will add another reminder to tuesday [weekday #2] at 7pm.
    * Within 14 days turns into a daily reminder at 7pm.
    */
 function shouldSendProducerMissingAlert(utcMillisShowStart: number): boolean {
@@ -44,7 +44,7 @@ function shouldSendProducerMissingAlert(utcMillisShowStart: number): boolean {
     // Any weekday at 7 PM
     return time == 19;
   }
-  if (isWithinDays(utcMillisShowStart, 28)) {
+  if (isWithinDays(utcMillisShowStart, 31)) {
     // Saturday at 12 AM
     if (weekDay === 6 && time === 12) {
       return true;
@@ -54,7 +54,7 @@ function shouldSendProducerMissingAlert(utcMillisShowStart: number): boolean {
       return true;
     }
   }
-  if (isWithinDays(utcMillisShowStart, 42)) {
+  if (isWithinDays(utcMillisShowStart, 90)) {
     // Saturday at 12 AM
     if (weekDay === 6 && time === 12) {
       return true;
@@ -120,7 +120,7 @@ function getSlackMessageProducerMissing(show: Show, dev = false): SlackBlocks {
         "type": "section",
         "text": {
           "type": "mrkdwn",
-          "text": "*Wieso und Woher kommt dies Nachricht?*\nDiese Nachricht kommt immer, wenn eine Show näher rückt und niemand das Zepter in die Hand nimmt. Dafür gelten folgende Regeln:\n\n* 4-6 Wochen vor dem Termin kommt diese Nachricht ein Mal pro Woche\n * 4-2 Wochen vor dem Termin kommt diese Nachricht zwei Mal pro Woche\n * In den 2 Wochen vor dem Termin kommt sie täglich.\n\n Sobald jemand im Dokument für den Auftritt in der Spalte `Verantwortlich` steht, hört der Spuk auf"
+          "text": "*Wieso und Woher kommt dies Nachricht?*\nDiese Nachricht kommt immer, wenn eine Show näher rückt und niemand das Zepter in die Hand nimmt. Dafür gelten folgende Regeln:\n\n* drei bis ein Monate vor dem Termin kommt diese Nachricht ein Mal pro Woche\n * Vier bis zwei Wochen vor dem Termin kommt diese Nachricht zwei Mal pro Woche\n * In den 2 Wochen vor dem Termin kommt sie täglich.\n\n Sobald jemand im Dokument für den Auftritt in der Spalte `Verantwortlich` steht, hört der Spuk auf"
         }
       },
       {
