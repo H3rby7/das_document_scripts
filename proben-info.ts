@@ -6,9 +6,9 @@
 /// <reference path="proben.ts" />
 /// <reference path="global-functions.ts" />
 
-function getAndPostTodaysProbenInfo() {
+function getAndPostTodaysProbenInfo(dev = false) {
   const today = new Date();
-  const data = findProbenInfo(today);
+  const data = findProbenInfo(today, dev);
   if (!data) {
     // no info on today, do nothing.
     return;
@@ -19,7 +19,7 @@ function getAndPostTodaysProbenInfo() {
   } else {
     content = getSlackMessageForProbe(data);
   }
-  sendSlackAlert(content, getSlackHookProben(false), true);
+  sendSlackAlert(content, getSlackHookProben(dev), true);
 }
 
 function findProbenInfo(searchDate: Date, dev = false): Rehearsal | null {
