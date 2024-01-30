@@ -117,19 +117,19 @@ interface CanPatchEvent {
 function patchEvent(event: GoogleAppsScript.Calendar.CalendarEvent, patch: CanPatchEvent, logger: string ) {
   const eventId = event.getId();
   if (event.getTitle() !== patch.eventName) {
+    Logger.log(FORMAT + "Event: %s, updating title from '%s' to '%s'", INFO, logger, eventId, event.getTitle(), patch.eventName);
     event.setTitle(patch.eventName);
-    Logger.log(FORMAT + 'Event: %s, updating summary', INFO, logger, eventId);
   }
   if (!areDatesEqual(event.getStartTime(), patch.startDate) || !areDatesEqual(event.getEndTime(), patch.endDate)) {
+    Logger.log(FORMAT + "Event: %s, updating time from START: '%s', END: '%s' to START: '%s' END: '%s'", INFO, logger, eventId, event.getStartTime().toISOString(), event.getEndTime().toISOString(), patch.startDate.toISOString(), patch.endDate.toISOString());
     event.setTime(patch.startDate, patch.endDate);
-    Logger.log(FORMAT + 'Event: %s, updating time', INFO, logger, eventId);
   }
   if (event.getDescription() !== patch.description) {
+    Logger.log(FORMAT + "Event: %s, updating description from '%s' to '%s'", INFO, logger, eventId, event.getDescription(), patch.description);
     event.setDescription(patch.description);
-    Logger.log(FORMAT + 'Event: %s, updating description', INFO, logger, eventId);
   }
   if (event.getLocation() !== patch.location) {
+    Logger.log(FORMAT + "Event: %s, updating location from '%s' to '%s'", INFO, logger, eventId, event.getLocation(), patch.location);
     event.setLocation(patch.location);
-    Logger.log(FORMAT + 'Event: %s, updating location', INFO, logger, eventId);
   }
 }

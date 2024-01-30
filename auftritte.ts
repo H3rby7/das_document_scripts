@@ -31,7 +31,12 @@ function updateAllShows(dev = false) {
   const lastRow = sheet.getLastRow();
   //Tables start with index 1, we ignore the header row as well, which makes it start at 2
   for (let i = 2; i <= lastRow; i++) {
-    createOrUpdateEventForShowRow(sheet, header, i, calendar, dev);
+    try {
+      createOrUpdateEventForShowRow(sheet, header, i, calendar, dev);
+    } catch (e) {
+      Logger.log(FORMAT + "Row '%s' returned error...", ERROR, AUFTRITTE, i);
+      Logger.log(e);
+    }
   }
 }
 
@@ -50,6 +55,7 @@ function createOrUpdateEventForShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet
     if (!eventId) {
       return;
     }
+    Logger.log(FORMAT + "Deleting Event of row '%s' with the ID '%s'.", INFO, AUFTRITTE, rowNr, eventId);
     calendar.getEventById(eventId).deleteEvent();
     sheet.getRange(rowNr, header['ID']).setValue('');
     return;
@@ -65,6 +71,12 @@ function createOrUpdateEventForShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet
   } else {
     Logger.log(FORMAT + 'eventId present for row: %s. Checking to update event.', TRACE, AUFTRITTE, rowNr);
     const event = calendar.getEventById(eventId);
+    if (!event) {
+      Logger.log(FORMAT + 'eventId for row: %s seems to be invalid, clearing and re-running.', WARN, AUFTRITTE, rowNr);
+      sheet.getRange(rowNr, header['ID']).setValue('');
+      createOrUpdateEventForShowRow(sheet, header, rowNr, calendar, dev);
+      return;
+    }
     patchEvent(event, showData, AUFTRITTE);
   }
 

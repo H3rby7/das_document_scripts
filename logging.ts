@@ -5,6 +5,7 @@ const TRACE = logLevel("TRACE");
 const DEBUG = logLevel("DEBUG");
 const INFO =  logLevel("INFO");
 const WARN =  logLevel("WARN");
+const ERROR =  logLevel("ERROR");
 
 const AUFTRITTE = fileName("auftritte");
 const PROBEN = fileName("proben");

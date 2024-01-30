@@ -37,14 +37,19 @@ function updateAllTrainings(dev = false) {
   const now = new Date().getTime();
   //Tables start with index 1, we ignore the header row as well, which makes it start at 2
   for (let i = 2; i <= lastRow; i++) {
-    const currentTraining = getDataFromTrainingRow(sheet, header, i);
-    // If the start time is BEFORE now we stop
-    if (currentTraining.startDate.getTime() < now) {
-      Logger.log(FORMAT + 'reached old trainings at row: %s, aborting mission', INFO, PROBEN, i);
-      return;
+    try {
+      const currentTraining = getDataFromTrainingRow(sheet, header, i);
+      // If the start time is BEFORE now we stop
+      if (currentTraining.startDate.getTime() < now) {
+        Logger.log(FORMAT + 'reached old trainings at row: %s, aborting mission', INFO, PROBEN, i);
+        return;
+      }
+      // Else we Create/Update/Delete Events based on the data
+      createOrUpdateEventForTrainingRow(sheet, header, i, calendar, dev);
+    } catch (e) {
+      Logger.log(FORMAT + "Row '%s' returned error...", ERROR, PROBEN, i);
+      Logger.log(e);
     }
-    // Else we Create/Update/Delete Events based on the data
-    createOrUpdateEventForTrainingRow(sheet, header, i, calendar, dev);
   }
 }
 
