@@ -99,22 +99,8 @@ function checkAndUpdateTrainingRowEvent(sheet: GoogleAppsScript.Spreadsheet.Shee
   const event = calendar.getEventById(eventId);
   const dataNow = getDataFromTrainingRow(sheet, header, rowNr);
   
-  if (event.getTitle() !== dataNow.eventName) {
-    event.setTitle(dataNow.eventName);
-    Logger.log(FORMAT + 'Event: %s, updating summary', INFO, PROBEN, eventId);
-  }
-  if (!areDatesEqual(event.getStartTime(), dataNow.startDate) || !areDatesEqual(event.getEndTime(), dataNow.endDate)) {
-    event.setTime(dataNow.startDate, dataNow.endDate);
-    Logger.log(FORMAT + 'Event: %s, updating time', INFO, PROBEN, eventId);
-  }
-  if (event.getDescription() !== dataNow.description) {
-    event.setDescription(dataNow.description);
-    Logger.log(FORMAT + 'Event: %s, updating description', INFO, PROBEN, eventId);
-  }
-  if (event.getLocation() !== dataNow.location) {
-    event.setLocation(dataNow.location);
-    Logger.log(FORMAT + 'Event: %s, updating location', INFO, PROBEN, eventId);
-  }
+  patchEvent(event, dataNow, PROBEN);
+
   if (dataNow.type === 'Impro-Jam') {
     // It is a JAM
     if (event.getGuestByEmail(getJamGuestEmail(dev)) == null) {

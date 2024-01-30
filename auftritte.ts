@@ -64,7 +64,8 @@ function createOrUpdateEventForShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet
     sheet.getRange(rowNr, header['ID']).setValue(event.getId());
   } else {
     Logger.log(FORMAT + 'eventId present for row: %s. Checking to update event.', TRACE, AUFTRITTE, rowNr);
-    checkAndUpdateShowRowEvent(showData, calendar.getId(), eventId);
+    const event = calendar.getEventById(eventId);
+    patchEvent(event, showData, AUFTRITTE);
   }
 
   alertProducerMissingIfNecessary(showData, dev);
@@ -129,49 +130,4 @@ function showRowToCalendarEvent(show: Show, calendar: GoogleAppsScript.Calendar.
   event.setLocation(show.location);
   event.setDescription(show.description);
   return event;
-}
-
-function checkAndUpdateShowRowEvent(show: Show, calendarId: string, eventId: string): boolean {
-  const strippedId = eventId.split('@')[0];
-  const cEvents = Calendar.Events as GoogleAppsScript.Calendar.Collection.EventsCollection;
-  const event = cEvents.get(calendarId, strippedId) as GoogleAppsScript.Calendar.Schema.Event;
-  const startDate = formatDateForEvent(show.startDate);
-  const endDate = formatDateForEvent(show.endDate);
-  
-  let postUpdate = false;
-  if (!event.start) {
-    Logger.log(FORMAT + 'Event: %s has no start!', WARN, AUFTRITTE, eventId);
-    event.start = {};
-  }
-  if (!event.end) {
-    Logger.log(FORMAT + 'Event: %s has no end!', WARN, AUFTRITTE, eventId);
-    event.end = {};
-  }
-  if (event.summary !== show.eventName) {
-    event.summary = show.eventName;
-    postUpdate = true;
-  }
-  if (event.start.dateTime !== startDate) {
-    event.start.dateTime = startDate;
-    postUpdate = true;
-  }
-  if (event.end.dateTime !== endDate) {
-    event.end.dateTime = endDate;
-    postUpdate = true;
-  }
-  if (event.description !== show.description) {
-    event.description = show.description;
-    postUpdate = true;
-  }
-  if (event.location !== show.location) {
-    event.location = show.location;
-    postUpdate = true;
-  }
-  if(postUpdate) {
-    Logger.log(FORMAT + 'updating event: %s. Checking to update event.', INFO, AUFTRITTE, eventId);
-  	cEvents.update(event, calendarId, strippedId);
-  } else {
-    Logger.log(FORMAT + 'Event did not change: %s', TRACE, AUFTRITTE, eventId);
-  }
-  return postUpdate;
 }

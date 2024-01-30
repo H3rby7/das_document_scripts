@@ -87,20 +87,6 @@ function areDatesEqualDayOnly(a: GoogleAppsScript.Base.Date, b: GoogleAppsScript
   return true;
 }
 
-function formatDateForEvent(date: GoogleAppsScript.Base.Date): string {
- date = date ? date : new Date();
- const offset = date.getTimezoneOffset();
- return padNumber(date.getFullYear(), 4)
-   + "-" + padNumber(date.getMonth() + 1, 2)
-   + "-" + padNumber(date.getDate(), 2)
-   + "T" + padNumber(date.getHours(), 2)
-   + ":" + padNumber(date.getMinutes(), 2)
-   + ":" + padNumber(date.getSeconds(), 2)
-   + (offset > 0 ? "-" : "+")
-   + padNumber(Math.floor(Math.abs(offset) / 60), 2)
-   + ":" + padNumber(Math.abs(offset) % 60, 2);
-}
-
 function formatDateForHumans(date: GoogleAppsScript.Base.Date): string {
   return padNumber(date.getDate(), 2)
   + "." + padNumber(date.getMonth() + 1, 2)
@@ -118,4 +104,32 @@ function daysToMillis(dayCount: number): number {
 
 function isWithinDays(utcMillisToCheck: number, dayCount: number): boolean {
   return utcMillisToCheck < (Date.now() + daysToMillis(dayCount))
+}
+
+interface CanPatchEvent {
+  startDate: Date;
+  endDate: Date;
+  eventName: string;
+  description: string;
+  location: string;
+}
+
+function patchEvent(event: GoogleAppsScript.Calendar.CalendarEvent, patch: CanPatchEvent, logger: string ) {
+  const eventId = event.getId();
+  if (event.getTitle() !== patch.eventName) {
+    event.setTitle(patch.eventName);
+    Logger.log(FORMAT + 'Event: %s, updating summary', INFO, logger, eventId);
+  }
+  if (!areDatesEqual(event.getStartTime(), patch.startDate) || !areDatesEqual(event.getEndTime(), patch.endDate)) {
+    event.setTime(patch.startDate, patch.endDate);
+    Logger.log(FORMAT + 'Event: %s, updating time', INFO, logger, eventId);
+  }
+  if (event.getDescription() !== patch.description) {
+    event.setDescription(patch.description);
+    Logger.log(FORMAT + 'Event: %s, updating description', INFO, logger, eventId);
+  }
+  if (event.getLocation() !== patch.location) {
+    event.setLocation(patch.location);
+    Logger.log(FORMAT + 'Event: %s, updating location', INFO, logger, eventId);
+  }
 }
