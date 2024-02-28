@@ -6,7 +6,7 @@
 /// <reference path="proben.ts" />
 /// <reference path="global-functions.ts" />
 
-function getAndPostTodaysProbenInfo(dev = false) {
+function getAndPostTomorrowsProbenInfo(dev = false) {
   const tomorrow = dateAddDays(new Date(), 1);
   const data = findProbenInfo(tomorrow, dev);
   if (!data) {
@@ -29,7 +29,7 @@ function findProbenInfo(searchDate: Date, dev = false): Rehearsal | null {
   // Get Headers
   const header = getHeaderOfSheet(sheet);
   const firstDataRow = 2; //Table starts at 1, but 1 is headers
-  const expectDateWithinRows = 100;  // expect to find today's training within X entries (rows)
+  const expectDateWithinRows = 100;  // expect to find the training within X entries (rows)
 
   const dateRange = sheet.getRange(firstDataRow, header["Datum"], expectDateWithinRows);
   const dates = dateRange.getValues() as DateArray[];
@@ -61,25 +61,25 @@ function getSlackMessageForProbe(trainingData: Rehearsal): SlackSimpleText {
   const date = formatDateForHumans(trainingStart);
   const time = formatTimeForHumans(trainingStart);
 
-  Logger.log(FORMAT + "Producing Slack information for today's (%s) training at %s!", INFO, PROBEN_INFO, date, time);
+  Logger.log(FORMAT + "Producing Slack information for tomorrow's (%s) training at %s!", INFO, PROBEN_INFO, date, time);
 
   // https://api.slack.com/reference/surfaces/formatting#retrieving-messages
   return {
-    "text": "PROBE HEUTE UM " + time + " UHR, " + trainingData.location + "\nLeitung durch: " + trainingData.trainer + ", Thema: '" + trainingData.topic + "'\n<!channel>"
+    "text": "PROBE MORGEN UM " + time + " UHR, " + trainingData.location + "\nLeitung durch: " + trainingData.trainer + ", Thema: '" + trainingData.topic + "'\n<!channel>"
   }
 }
 
 function getSlackMessageForAusfall(): SlackSimpleText {
   Logger.log(FORMAT + "Producing Slack canceled training message.", INFO, PROBEN_INFO);
   return {
-    "text": "Heute leider keine Probe :cry: \n<!channel> :beer:?"
+    "text": "Morgen leider keine Probe :cry: \n<!channel> :beer:?"
   }
 }
 
 function test_findProbenInfo_and_test_PostProbe() {
-  const fakeToday = new Date();
-  fakeToday.setDate(16); // <- Change this to the day of the month, which has a rehearsal
-  const data = findProbenInfo(fakeToday, true);
+  const fakeDate = new Date();
+  fakeDate.setDate(16); // <- Change this to the day of the month, which has a rehearsal
+  const data = findProbenInfo(fakeDate, true);
   if (data) {
     sendSlackAlert(getSlackMessageForProbe(data), getSlackHookProben(true), false);
   }

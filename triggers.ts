@@ -3,7 +3,7 @@ function trigger_shows() {
 }
 
 function trigger_probe() {
-  getAndPostTodaysProbenInfo(false);
+  getAndPostTomorrowsProbenInfo(false);
 }
 
 function trigger_trainings() {
