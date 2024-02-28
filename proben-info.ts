@@ -7,10 +7,10 @@
 /// <reference path="global-functions.ts" />
 
 function getAndPostTodaysProbenInfo(dev = false) {
-  const today = new Date();
-  const data = findProbenInfo(today, dev);
+  const tomorrow = dateAddDays(new Date(), 1);
+  const data = findProbenInfo(tomorrow, dev);
   if (!data) {
-    // no info on today, do nothing.
+    // no info on tomorrow, do nothing.
     return;
   }
   let content: SlackSimpleText;
