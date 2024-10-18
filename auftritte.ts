@@ -61,7 +61,6 @@ function createOrUpdateEventForShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet
     return;
   }
 
-
   // At this point we know the event is not canceled and in the future. Nice!
   const showData = getDataFromShowRow(sheet, header, rowNr);
   if (!eventId) {
@@ -74,6 +73,15 @@ function createOrUpdateEventForShowRow(sheet: GoogleAppsScript.Spreadsheet.Sheet
     if (!event) {
       Logger.log(FORMAT + 'eventId for row: %s seems to be invalid, clearing and re-running.', WARN, AUFTRITTE, rowNr);
       sheet.getRange(rowNr, header['ID']).setValue('');
+      createOrUpdateEventForShowRow(sheet, header, rowNr, calendar, dev);
+      return;
+    }
+    if (event.getTitle() === '') {
+      Logger.log(FORMAT + 'Event %s title is empty, which results in errors when updating. Deleting event and triggering recreation...', WARN, PROBEN, eventId);
+      event.deleteEvent();
+      Logger.log(FORMAT + 'Event %s deleted, clearing ID of row %s', DEBUG, PROBEN, eventId, rowNr);
+      sheet.getRange(rowNr, header['ID']).setValue('');
+      Logger.log(FORMAT + 'Row %s cleared of event %s. Triggering recreation.', DEBUG, PROBEN, rowNr, eventId);
       createOrUpdateEventForShowRow(sheet, header, rowNr, calendar, dev);
       return;
     }

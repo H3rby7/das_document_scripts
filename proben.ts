@@ -76,7 +76,7 @@ function createOrUpdateEventForTrainingRow(sheet: GoogleAppsScript.Spreadsheet.S
   // We have an event ID for this row, check for updates
   Logger.log(FORMAT + 'eventId present for Row %s. Checking to update event.', TRACE, PROBEN, rowNr);
   checkAndUpdateTrainingRowEvent(sheet, header, rowNr, calendar, eventId, dev);
-  return eventId;
+  return;
 }
 
 // This function creates new Events based on the passed data
@@ -104,6 +104,16 @@ function checkAndUpdateTrainingRowEvent(sheet: GoogleAppsScript.Spreadsheet.Shee
   const event = calendar.getEventById(eventId);
   const dataNow = getDataFromTrainingRow(sheet, header, rowNr);
   
+  if (event.getTitle() === '') {
+    Logger.log(FORMAT + 'Event %s title is empty, which results in errors when updating. Deleting event and triggering recreation...', WARN, PROBEN, eventId);
+    event.deleteEvent();
+    Logger.log(FORMAT + 'Event %s deleted, clearing ID of row %s', DEBUG, PROBEN, eventId, rowNr);
+    sheet.getRange(rowNr, header['ID']).setValue('');
+    Logger.log(FORMAT + 'Row %s cleared of event %s. Triggering recreation.', DEBUG, PROBEN, rowNr, eventId);
+    createOrUpdateEventForTrainingRow(sheet, header, rowNr, calendar, dev);
+    return;
+  }
+
   patchEvent(event, dataNow, PROBEN);
 
   if (dataNow.type === 'Impro-Jam') {
